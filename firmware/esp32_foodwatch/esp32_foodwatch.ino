@@ -43,8 +43,9 @@
 const char* WIFI_SSID     = "YOUR_WIFI_NAME";
 const char* WIFI_PASSWORD = "YOUR_WIFI_PASSWORD";
 
-// ThingSpeak (already filled in for channel 3425567)
-const char* TS_WRITE_API_KEY = "YOUR_WRITE_KEY";
+// ThingSpeak channel 3425567 — paste YOUR Write API Key here (kept on the
+// device only; do NOT commit the real key to a public repo).
+const char* TS_WRITE_API_KEY = "YOUR_THINGSPEAK_WRITE_KEY";
 
 // HOSTEL_CODE goes to field2 — it tells the dashboard which hostel this
 // scale belongs to. Set it to this board's hostel number:

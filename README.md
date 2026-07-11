@@ -6,9 +6,13 @@ An **ESP32 + load cell (HX711)** in each hostel weighs food waste and pushes rea
 **14 IITG hostels** — both a comparison overview and per-hostel drill-downs.
 
 ```
-ESP32 + HX711 (per hostel) ──(WiFi/HTTP)──► ThingSpeak (cloud) ──(REST API)──► WasteWise Dashboard
-   weighs waste, tags hostel                 stores + timestamps               login → overview + per-hostel
+ESP32 + HX711 (per hostel) ─► ThingSpeak (cloud) ─► WasteWise server (holds keys) ─► Browser dashboard
+   weighs waste, tags hostel     stores + timestamps    proxies /api/feeds, /api/reading     login → analytics
 ```
+
+> **Keys never reach the browser.** The ThingSpeak API keys live only in the server's
+> `.env` (gitignored). The dashboard calls the backend at `/api/*`, and the backend
+> talks to ThingSpeak. Nothing secret is shipped to the client or committed to the repo.
 
 ### Dashboard features
 - **Login gate** (demo auth) — default `admin` / `foodwatch2026` (set in `config.js`).
@@ -30,11 +34,15 @@ ESP32 + HX711 (per hostel) ──(WiFi/HTTP)──► ThingSpeak (cloud) ──(
 
 ```
 TIH IOT Project/
-├── index.html                       # Landing page + dashboard (Home/About/Solution/Gallery/Dashboard/Contact)
+├── server.js                        # Node/Express backend — serves the site + proxies ThingSpeak
+├── package.json                     # backend deps (express, dotenv)
+├── .env                             # 🔒 your ThingSpeak keys (gitignored, never served)
+├── .env.example                     # template for .env
+├── index.html                       # Landing page + dashboard
 ├── style.css                        # All styling
-├── script.js                        # Navigation, animations, live dashboard logic
-├── config.js                        # ⚙️ ThingSpeak keys, login, hostels, settings
-├── dashboard.js                     # Multi-hostel dashboard logic (login, overview, per-hostel)
+├── script.js                        # Navigation, animations
+├── config.js                        # Frontend settings — NO secrets (login, hostels, factors)
+├── dashboard.js                     # Multi-hostel dashboard logic (calls /api/*)
 ├── README.md
 └── firmware/
     └── esp32_foodwatch/
@@ -43,43 +51,55 @@ TIH IOT Project/
 
 ---
 
-## 1. The website / dashboard
+## 1. The website / dashboard (with backend)
 
-The site is a single static page — no build step, no server required.
+The site is served by a small Node/Express backend that also proxies ThingSpeak so the
+API keys stay server-side.
 
-**Run it locally (recommended, avoids browser file:// limits):**
+**Run it locally:**
 ```bash
 cd "TIH IOT Project"
-python -m http.server 5173
-# then open http://localhost:5173
+cp .env.example .env        # then edit .env and paste your ThingSpeak keys
+npm install                 # installs express + dotenv
+npm start                   # -> http://localhost:3000
 ```
-Or simply double-click `index.html`.
 
-### Configuration — `config.js`
-Everything is controlled from one file:
+### Secrets — `.env` (never committed)
+```
+TS_CHANNEL_ID=3425567
+TS_READ_KEY=your_read_api_key
+TS_WRITE_KEY=your_write_api_key
+PORT=3000
+```
+`.env` is gitignored. The browser never sees these — it only calls the backend:
+
+| Endpoint | Purpose |
+|----------|---------|
+| `GET /api/config`  | non-secret info: channel id + whether writes are enabled |
+| `GET /api/feeds`   | proxied ThingSpeak feeds (READ key used server-side) |
+| `POST /api/reading`| write a reading (WRITE key used server-side) |
+
+### Frontend settings — `config.js` (no secrets)
 ```js
-THINGSPEAK_CHANNEL_ID:   '3425567',
-THINGSPEAK_READ_API_KEY: 'YOUR_READ_KEY',   // dashboard reads with this
-THINGSPEAK_WRITE_API_KEY:'YOUR_WRITE_KEY',   // enables the manual-entry form
-FIELD_WEIGHT:  'field1',      // load-cell weight (kg)
+API_BASE: '',                 // '' = same origin as the backend
+FIELD_WEIGHT: 'field1',       // load-cell weight (kg)
 FIELD_STATION: 'field2',      // HOSTEL CODE (1..14)
-PRICE_PER_KG:  75,            // ₹ value of 1 kg of food
-CO2_PER_KG:    2.5,           // kg CO₂e per kg of food
-REFRESH_SECONDS: 20,          // dashboard auto-refresh interval
-
-AUTH_USERNAME: 'admin',       // dashboard login
-AUTH_PASSWORD: 'foodwatch2026',
-HOSTELS: [ 'Barak', 'Brahmaputra', ... ],  // 14 hostels; index+1 = hostel code
+PRICE_PER_KG: 75, CO2_PER_KG: 2.5, REFRESH_SECONDS: 20,
+AUTH_USERNAME: 'admin', AUTH_PASSWORD: 'foodwatch2026',   // demo login
+HOSTELS: [ 'Barak', 'Brahmaputra', ... ],                 // 14 hostels; index+1 = hostel code
 DEMO_FILL: true               // simulate hostels that have no real data yet
 ```
 
-**How hostels map to data:** there's one ThingSpeak channel. Each reading's `field2`
-carries the **hostel code (1–14)** — the position of the hostel in the `HOSTELS` list.
-The dashboard buckets readings by that code to build per-hostel and comparison analytics.
-Each hostel's ESP32 sets its own `HOSTEL_CODE` (see firmware).
+**How hostels map to data:** one ThingSpeak channel; each reading's `field2` carries the
+**hostel code (1–14)** — the position of the hostel in the `HOSTELS` list. The dashboard
+buckets readings by that code. Each hostel's ESP32 sets its own `HOSTEL_CODE` (see firmware).
 
-> If the Read API key is missing/invalid, the dashboard falls back to **fully simulated
-> data** with a banner, so the page always looks complete.
+> If the backend is unreachable, the dashboard falls back to **fully simulated data** with
+> a banner, so the page always looks complete.
+
+**Deploying:** any Node host works (Render, Railway, Fly.io, a VPS…). Set the three
+`TS_*` values as environment variables there. GitHub Pages can't run the backend, so it
+isn't suitable for the full app.
 
 ### Login
 The dashboard opens on a **sign-in screen**. Default credentials (change in `config.js`):
@@ -99,13 +119,13 @@ password: foodwatch2026
 - **Fields:** `field1` = weight (kg), `field2` = hostel code (1–14)
 - **API Keys tab** gives you the Read key (dashboard) and Write key (ESP32).
 
-**Test the pipeline from a terminal** (no hardware needed):
+**Test the pipeline from a terminal** (no hardware needed) — use your own keys:
 ```bash
-# write a reading (weight=2.4 kg, station=1)
+# write a reading (weight=2.4 kg, hostel=1)
 curl "https://api.thingspeak.com/update?api_key=YOUR_WRITE_KEY&field1=2.4&field2=1"
 
 # read it back
-curl "https://api.thingspeak.com/channels/3425567/feeds.json?api_key=YOUR_READ_KEY&results=5"
+curl "https://api.thingspeak.com/channels/YOUR_CHANNEL_ID/feeds.json?api_key=YOUR_READ_KEY&results=5"
 ```
 > ThingSpeak's free tier allows **one update every ~15 seconds**.
 > To wipe test data: channel → **Data Import / Export → Clear Channel**.
@@ -159,13 +179,19 @@ Load cell → HX711: `E+/E-` = red/black, `A+/A-` = white/green (typical 4-wire 
 
 ---
 
-## Notes & next steps
-- The load cell measures **weight only** — it can't identify food *category*. A
-  category breakdown would need a manual selector (button/keypad) writing to `field3`.
-- Keys in `config.js` are visible in the browser. For a public deployment, make the
-  channel **Public** (read-only) or proxy reads through a small server.
-- Ideas: per-mess dashboards (filter by `field2`), daily email reports, and a
-  MATLAB/ThingSpeak reaction to alert when daily waste crosses a threshold.
+## Security notes
+- ThingSpeak keys live only in the server `.env` and in the ESP32 firmware on-device.
+  They are **not** in `config.js`, not shipped to the browser, and not committed.
+- The **ESP32 write key** must be pasted into `esp32_foodwatch.ino` locally — do not
+  commit the real key to a public repo.
+- Dashboard login is **demo-level** (checked in the browser). For real access control,
+  add server-side sessions.
+- If any key was ever committed/public before, **regenerate it** on ThingSpeak
+  (channel → API Keys → Generate New) and update `.env` + the firmware.
+
+## Next steps / ideas
+- Category breakdown via a manual selector (button/keypad) writing to `field3`.
+- Per-mess dashboards, daily email reports, threshold alerts (ThingSpeak React / MATLAB).
 
 ---
 *An initiative supported by **IITG TIH**.*

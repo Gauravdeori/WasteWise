@@ -3,13 +3,9 @@
   "configurations": [
     {
       "name": "landing-page",
-      "runtimeExecutable": "python",
-      "runtimeArgs": [
-        "-c",
-        "import os; from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler; port = int(os.environ.get('PORT', '5173')); ThreadingHTTPServer(('127.0.0.1', port), SimpleHTTPRequestHandler).serve_forever()"
-      ],
-      "port": 5173,
-      "autoPort": true
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["server.js"],
+      "port": 5173
     }
   ]
 }

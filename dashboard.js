@@ -17,8 +17,8 @@
   const PRICE = CFG.PRICE_PER_KG || 75;
   const CO2 = CFG.CO2_PER_KG || 2.5;
   const POP = CFG.HOSTEL_POPULATION || 450;
+  const API = (CFG.API_BASE || '').replace(/\/$/, '');   // backend base, '' = same origin
   const nf = n => Number(n).toLocaleString('en-IN');
-  const keyLooksReal = k => k && !/PASTE_YOUR/i.test(k) && k.length >= 8;
   const localKey = d => d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate();
   const sameDay = (a, b) => localKey(a) === localKey(b);
 
@@ -127,12 +127,16 @@
     return computeStats(readings);
   }
 
-  /* ---------------- FETCH ---------------- */
+  /* ---------------- FETCH (via backend proxy) ---------------- */
+  let serverConfig = { channelId: '', writeEnabled: false };
+  async function loadServerConfig() {
+    try {
+      const r = await fetch(API + '/api/config', { cache: 'no-store' });
+      if (r.ok) serverConfig = await r.json();
+    } catch (e) { /* backend down — handled during refresh */ }
+  }
   async function fetchFeeds() {
-    const id = CFG.THINGSPEAK_CHANNEL_ID, key = CFG.THINGSPEAK_READ_API_KEY;
-    let url = `https://api.thingspeak.com/channels/${id}/feeds.json?results=${CFG.MAX_FEED_RESULTS || 8000}`;
-    if (keyLooksReal(key)) url += `&api_key=${encodeURIComponent(key)}`;
-    const res = await fetch(url, { cache: 'no-store' });
+    const res = await fetch(`${API}/api/feeds?results=${CFG.MAX_FEED_RESULTS || 8000}`, { cache: 'no-store' });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     return res.json();
   }
@@ -350,20 +354,28 @@
     });
   }
 
-  /* ---------------- MANUAL ENTRY ---------------- */
-  if (keyLooksReal(CFG.THINGSPEAK_WRITE_API_KEY)) {
+  /* ---------------- MANUAL ENTRY (via backend) ---------------- */
+  let manualReady = false;
+  function setupManual() {
+    if (manualReady || !serverConfig.writeEnabled) return;
+    manualReady = true;
     $('dashManual').hidden = false;
     $('manualHostel').innerHTML = HOSTELS.map((n, i) => `<option value="${i + 1}">${n}</option>`).join('');
     $('manualForm').addEventListener('submit', async e => {
       e.preventDefault();
       const w = parseFloat($('manualWeight').value);
       if (isNaN(w)) return;
-      let url = `https://api.thingspeak.com/update?api_key=${CFG.THINGSPEAK_WRITE_API_KEY}&${CFG.FIELD_WEIGHT || 'field1'}=${w}`;
-      if (CFG.FIELD_STATION) url += `&${CFG.FIELD_STATION}=${$('manualHostel').value}`;
       $('manualMsg').textContent = 'Sending…';
       try {
-        const r = await fetch(url); const entry = await r.text();
-        $('manualMsg').textContent = entry !== '0' ? '✓ Sent (entry #' + entry + ')' : '⚠ Rate limited — wait 15s';
+        const r = await fetch(API + '/api/reading', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ weight: w, hostel: $('manualHostel').value })
+        });
+        const j = await r.json().catch(() => ({}));
+        if (r.ok && j.entry_id > 0) $('manualMsg').textContent = '✓ Sent (entry #' + j.entry_id + ')';
+        else if (r.ok && j.entry_id === 0) $('manualMsg').textContent = '⚠ Rate limited — wait 15s';
+        else $('manualMsg').textContent = '✗ ' + (j.error || 'failed');
         $('manualForm').reset();
         setTimeout(refresh, 1500);
       } catch (err) { $('manualMsg').textContent = '✗ ' + err.message; }
@@ -392,28 +404,27 @@
   }
 
   async function refresh() {
-    if (!keyLooksReal(CFG.THINGSPEAK_READ_API_KEY)) {
-      showBanner('⚠️ No ThingSpeak <strong>Read API Key</strong> in <code>config.js</code> — all data is simulated.');
+    try {
+      const data = await fetchFeeds();
+      lastHostels = buildHostels(bucketReal(data.feeds));
+      const liveCount = lastHostels.filter(h => h.source === 'live').length;
+      if (!data.feeds || !data.feeds.length) {
+        showBanner('✅ Connected to the WasteWise server. Waiting for the first reading — other hostels show simulated data.');
+      } else if (CFG.DEMO_FILL && liveCount < HOSTELS.length) {
+        showBanner('📡 <strong>' + liveCount + '</strong> hostel(s) sending live data via the server; the rest are simulated (<code>DEMO_FILL</code> in <code>config.js</code>).');
+      } else hideBanner();
+    } catch (err) {
+      showBanner('❌ Could not reach the WasteWise server (<strong>' + err.message + '</strong>) — showing simulated data. Start it with <code>npm start</code>.');
       lastHostels = buildHostels({});
-    } else {
-      try {
-        const data = await fetchFeeds();
-        lastHostels = buildHostels(bucketReal(data.feeds));
-        const liveCount = lastHostels.filter(h => h.source === 'live').length;
-        if (CFG.DEMO_FILL && liveCount < HOSTELS.length) {
-          showBanner('📡 <strong>' + liveCount + '</strong> hostel(s) sending live ThingSpeak data; the rest are simulated (<code>DEMO_FILL</code> in <code>config.js</code>).');
-        } else hideBanner();
-      } catch (err) {
-        showBanner('❌ Could not reach ThingSpeak (<strong>' + err.message + '</strong>) — showing simulated data.');
-        lastHostels = buildHostels({});
-      }
     }
     renderAll();
   }
 
   $('dashRefresh').addEventListener('click', refresh);
 
-  function start() {
+  async function start() {
+    await loadServerConfig();
+    setupManual();
     refresh();
     if (timer) clearInterval(timer);
     timer = setInterval(refresh, (CFG.REFRESH_SECONDS || 20) * 1000);
