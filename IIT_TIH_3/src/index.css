@@ -1,0 +1,99 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Pure clean background with very subtle off-white for contrast elements */
+    --background: 0 0% 100%;
+    --foreground: 220 30% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 30% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 30% 10%;
+
+    /* Premium Green (Emerald/Teal tone) */
+    --primary: 154 60% 45%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Premium Blue (Royal/Vibrant tone) */
+    --secondary: 220 80% 55%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 220 20% 97%;
+    --muted-foreground: 220 15% 45%;
+
+    --accent: 220 20% 97%;
+    --accent-foreground: 220 30% 10%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 20% 92%;
+    --input: 220 20% 92%;
+    --ring: 154 60% 45%;
+
+    --radius: 1.25rem; /* Larger border radius for that friendly SaaS look */
+  }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  /* Premium Glassmorphism */
+  .glass {
+    @apply bg-white/70 backdrop-blur-xl border border-white/50 shadow-[0_8px_30px_rgb(0,0,0,0.04)];
+  }
+  
+  .glass-heavy {
+    @apply bg-white/90 backdrop-blur-2xl border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.06)];
+  }
+
+  /* Bento Box / Premium Card Utilities */
+  .bento-card {
+    @apply relative overflow-hidden bg-white rounded-3xl border border-slate-100/80 shadow-[0_2px_20px_rgb(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] transition-all duration-500 hover:-translate-y-1;
+  }
+  
+  .bento-inner-glow {
+    @apply absolute inset-0 rounded-3xl pointer-events-none border border-white/50 z-10;
+  }
+
+  /* Mesh Gradients */
+  .mesh-bg {
+    background-color: #ffffff;
+    background-image: 
+      radial-gradient(at 0% 0%, hsla(154, 60%, 95%, 1) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, hsla(220, 80%, 95%, 1) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, hsla(154, 60%, 95%, 1) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, hsla(220, 80%, 95%, 1) 0px, transparent 50%);
+  }
+
+  .mesh-bg-dark {
+    background-color: #0f172a;
+    background-image: 
+      radial-gradient(at 0% 0%, hsla(154, 60%, 15%, 1) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, hsla(220, 80%, 15%, 1) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, hsla(154, 60%, 15%, 1) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, hsla(220, 80%, 15%, 1) 0px, transparent 50%);
+  }
+
+  /* Text Gradients */
+  .text-gradient {
+    @apply text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-blue-600;
+  }
+}

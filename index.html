@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WasteWise — IoT Based Real-Time Food Waste Monitoring System | IIT Guwahati TIH</title>
+  <meta name="description" content="WasteWise — IoT based real-time food waste monitoring system to measure, monitor and reduce food waste. An initiative at IIT Guwahati TIH." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&family=Fraunces:opsz,wght@9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ============ NAVBAR ============ -->
+  <header class="navbar" id="navbar">
+    <div class="container nav-inner">
+      <a href="#home" class="logo">
+        <span class="logo-mark"><svg class="pic logo-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21v-9"/><path d="M12 12C12 7.2 8.2 4 3.5 4 3.5 9 7.2 12 12 12z"/><path d="M12 12c0-3.8 3-6.3 8.5-6.3C20 10.3 16.8 12 12 12z"/></svg></span>
+        <span class="logo-text">Waste<span>Wise</span></span>
+      </a>
+      <nav class="nav-links" id="navLinks">
+        <a href="#home" class="active">Home</a>
+        <a href="#about">About</a>
+        <a href="#solution">Solution</a>
+        <a href="#gallery">Gallery</a>
+        <a href="#dashboard">Dashboard</a>
+        <a href="#contact" class="nav-cta">Contact Us</a>
+      </nav>
+      <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ============ HOME / HERO ============ -->
+  <section class="hero page-section active" id="home">
+    <div class="hero-top">
+      <div class="hero-overlay"></div>
+      <div class="container hero-content">
+        <p class="hero-tag reveal">IIT Guwahati &middot; TIH Initiative</p>
+        <h1 class="reveal">IoT Based Real-Time<br /><span class="grad-text">Food Waste Monitoring</span> System</h1>
+        <p class="hero-sub reveal">Measure, monitor and reduce food waste — with automated data collection,
+          real-time visualization and cloud-powered analytics, all in one platform.</p>
+        <div class="hero-btns reveal">
+          <a href="#solution" class="btn btn-primary">Explore the Solution</a>
+          <a href="#dashboard" class="btn btn-ghost">View Dashboard</a>
+        </div>
+
+        <!-- Stats strip -->
+        <div class="stats-strip reveal">
+          <div class="stat">
+            <h3><span class="counter" data-target="68.7" data-decimals="1">0</span>M</h3>
+            <p>Tonnes of food wasted annually in Indian homes</p>
+          </div>
+          <div class="stat">
+            <h3><span class="counter" data-target="50">0</span> kg</h3>
+            <p>Food wasted per person every year in India</p>
+          </div>
+          <div class="stat">
+            <h3>₹<span class="counter" data-target="89000">0</span> Cr</h3>
+            <p>Annual economic loss — nearly 1% of India's GDP</p>
+          </div>
+          <div class="stat">
+            <h3><span class="counter" data-target="40">0</span>%</h3>
+            <p>Of produced food goes uneaten</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- The Problem -->
+    <div class="home-problem">
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="section-tag">The Hidden Truth</p>
+          <h2>Food Wastage in India — From Farm to Bin</h2>
+          <p class="section-sub">Behind every plate left unfinished lies a chain of wasted water, energy,
+            labour and money. The numbers tell a story we can no longer ignore.</p>
+        </div>
+        <div class="problem-grid">
+          <div class="problem-card reveal">
+            <div class="problem-icon"><svg class="pic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9.5 21v-6h5v6"/></svg></div>
+            <h3>Household Wastage</h3>
+            <p>According to the UNEP's Food Waste Index report, <strong>68.7 million tonnes</strong> of food
+              is wasted annually in Indian homes — about <strong>50 kg per person</strong>. India stands
+              <strong>2nd worldwide</strong> in household food wastage, only after China.</p>
+          </div>
+          <div class="problem-card reveal">
+            <div class="problem-icon"><svg class="pic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.7 2.7 2.7 15.3 0 18"/><path d="M12 3c-2.7 2.7-2.7 15.3 0 18"/></svg></div>
+            <h3>A Global Crisis</h3>
+            <p>The National Resources Defense Council (NRDC) reports that <strong>40% of food produced goes
+              uneaten in the US</strong>. In Asia, approximately <strong>1.34 billion tonnes</strong> of food
+              is wasted — the main contributors being India and China.</p>
+          </div>
+          <div class="problem-card reveal">
+            <div class="problem-icon"><svg class="pic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6l6.5 7 4-4L21 17"/><path d="M21 11.5V17h-5.5"/></svg></div>
+            <h3>Economic Loss</h3>
+            <p>In India, the food wasted is equivalent to nearly <strong>₹89,000 crore per year</strong> —
+              almost <strong>1% of the country's GDP</strong> depleted in the form of food wastage,
+              from farm to bin.</p>
+          </div>
+        </div>
+
+        <blockquote class="quote-block reveal">
+          <p>"Studies show that businesses, such as hotels, restaurants and food retailers, earn financial
+            returns by investing in food waste reduction."</p>
+          <cite>— The Guardian</cite>
+        </blockquote>
+      </div>
+    </div>
+
+    <!-- What WasteWise Does -->
+    <div class="home-features">
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="section-tag">What We Do</p>
+          <h2>Turning Waste Into Data, Data Into Action</h2>
+          <p class="section-sub">WasteWise closes the loop between what is cooked, what is served
+            and what ends up in the bin.</p>
+        </div>
+        <div class="feature-strip">
+          <div class="feature-chip reveal">
+            <span class="fc-icon"><svg class="pic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v16"/><path d="M8 20h8"/><path d="M5 7h14"/><path d="M5 7l-2.6 5.8a3 3 0 0 0 5.2 0L5 7z"/><path d="M19 7l-2.6 5.8a3 3 0 0 0 5.2 0L19 7z"/></svg></span>
+            <div><h4>Measure</h4><p>Every gram of waste is weighed automatically at the source</p></div>
+          </div>
+          <div class="feature-chip reveal">
+            <span class="fc-icon"><svg class="pic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5a10 10 0 0 1 14 0"/><path d="M8.2 15.8a5.6 5.6 0 0 1 7.6 0"/><circle cx="12" cy="19" r="1.3" fill="currentColor" stroke="none"/></svg></span>
+            <div><h4>Monitor</h4><p>Live tracking across kitchens, messes and dining halls</p></div>
+          </div>
+          <div class="feature-chip reveal">
+            <span class="fc-icon"><svg class="pic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20v-6"/><path d="M11 20V8"/><path d="M17 20V11"/><path d="M3 20h18"/></svg></span>
+            <div><h4>Analyze</h4><p>Cloud analytics reveal patterns, costs and footprint</p></div>
+          </div>
+          <div class="feature-chip reveal">
+            <span class="fc-icon"><svg class="pic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 21C6 12 10 6.5 20 4.5c-1 10-5.5 14.5-12 14.5"/><path d="M6 21c1.5-5 4.5-8.5 9-11.5"/></svg></span>
+            <div><h4>Reduce</h4><p>Insights drive menu planning and waste reduction</p></div>
+          </div>
+        </div>
+
+        <!-- Who it's for -->
+        <div class="audience reveal">
+          <h3>Built For</h3>
+          <div class="audience-chips">
+            <span>🎓 Institute Hostels &amp; Messes</span>
+            <span>🏨 Hotels</span>
+            <span>🍴 Restaurants</span>
+            <span>🛒 Food Retailers</span>
+            <span>🏢 Corporate Canteens</span>
+            <span>🏥 Hospital Kitchens</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA banner -->
+    <div class="cta-banner">
+      <div class="container cta-inner reveal">
+        <div>
+          <h2>Ready to stop feeding the bin?</h2>
+          <p>Join us in building India's first Zero Food Waste Institute.</p>
+        </div>
+        <a href="#contact" class="btn btn-lime">Get In Touch</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ABOUT ============ -->
+  <section class="about section-bg-light page-section" id="about">
+    <div class="container">
+      <div class="section-head reveal">
+        <p class="section-tag">Who We Are</p>
+        <h2>About the Project</h2>
+        <p class="section-sub">India stands 2nd worldwide in household food wastage (UNEP Food Waste Index).
+          We are building the technology to change that — starting from institutional kitchens and hostels.</p>
+      </div>
+
+      <!-- Story -->
+      <div class="about-story reveal">
+        <div class="story-img">
+          <img src="assets/about-story.jpg" alt="WasteWise smart bin with IoT scale display in a kitchen" loading="lazy" />
+        </div>
+        <div class="story-text">
+          <h3>Why WasteWise Exists</h3>
+          <p>Every day, institutional kitchens across India prepare thousands of meals — and a significant
+            share of that food never gets eaten. Without measurement, this waste stays invisible: nobody
+            knows how much is lost, what it costs, or where to intervene.</p>
+          <p>WasteWise was born at the <strong>TIDF Research Building, IIT Guwahati</strong>, as an
+            IoT-driven answer to this problem. By placing smart, connected weighing scales at the point
+            where waste is generated, we convert every discarded plate into a data point — and every
+            data point into an opportunity to save food, money and the environment.</p>
+          <div class="story-facts">
+            <div><h4>2024</h4><p>Project initiated</p></div>
+            <div><h4>IITG</h4><p>TIH Initiative</p></div>
+            <div><h4>IoT</h4><p>Powered by smart scales</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vision / Mission / Objectives -->
+      <div class="vmo-grid">
+        <div class="vmo-card reveal">
+          <div class="vmo-icon"><svg class="pic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg></div>
+          <h3>Our Vision</h3>
+          <p>To create a milestone — the first <strong>Zero Food Waste Institute in India</strong> — and set a
+            replicable model for campuses, hostels, hotels and restaurants across the country, recognised
+            through certification and awards in this area.</p>
+        </div>
+        <div class="vmo-card vmo-highlight reveal">
+          <div class="vmo-icon"><svg class="pic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/></svg></div>
+          <h3>Our Mission</h3>
+          <p>To record, track and reduce food waste easily and reliably using IoT — replacing pen and paper
+            with automated, real-time monitoring that makes waste visible, measurable and actionable.</p>
+        </div>
+        <div class="vmo-card reveal">
+          <div class="vmo-icon"><svg class="pic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4.5a3 3 0 0 1 6 0"/><path d="M9 13.5l2 2 4-4.5"/></svg></div>
+          <h3>Our Objectives</h3>
+          <ul>
+            <li>Automate food waste recording with the IoT Waste Scale</li>
+            <li>Visualize waste data in real time on the cloud</li>
+            <li>Centralize records in one platform for analysis</li>
+            <li>Optimize production &amp; menu planning using waste insights</li>
+            <li>Quantify the amount, value and footprint of waste</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Results & Targets -->
+      <div class="targets reveal">
+        <h3>Results &amp; Targets</h3>
+        <div class="targets-grid">
+          <div class="target-item"><span><svg class="pic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 5H4a3 3 0 0 0 3 4.5"/><path d="M17 5h3a3 3 0 0 1-3 4.5"/><path d="M12 14v4"/><path d="M8 21h8"/></svg></span><p>Create a milestone — a <strong>Zero Food Waste Institute</strong> in India with certification &amp; awards</p></div>
+          <div class="target-item"><span><svg class="pic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 3v18"/><path d="M13 8h3"/><path d="M13 12h3"/></svg></span><p><strong>Record, track and reduce</strong> food waste easily and reliably</p></div>
+          <div class="target-item"><span><svg class="pic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4l1.6 4.4L18 10l-4.4 1.6L12 16l-1.6-4.4L6 10l4.4-1.6z"/><path d="M18.6 15.6l.7 1.9 1.9.7-1.9.7-.7 1.9-.7-1.9-1.9-.7 1.9-.7z"/></svg></span><p><strong>Forget pen and paper</strong> — automate daily routines</p></div>
+          <div class="target-item"><span><svg class="pic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21V8.5l6 4v-4l6 4V4.5h6V21z"/><path d="M3 21h18"/></svg></span><p><strong>Optimize production</strong> based on real consumption data</p></div>
+          <div class="target-item"><span><svg class="pic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h12"/><path d="M9 12h12"/><path d="M9 18h12"/><circle cx="4" cy="6" r="1" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1" fill="currentColor" stroke="none"/></svg></span><p>Take waste into account when <strong>planning the menu</strong></p></div>
+          <div class="target-item"><span><svg class="pic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 21C6 12 10 6.5 20 4.5c-1 10-5.5 14.5-12 14.5"/><path d="M6 21c1.5-5 4.5-8.5 9-11.5"/></svg></span><p>Reduce the <strong>carbon footprint</strong> of every meal served</p></div>
+        </div>
+      </div>
+
+      <!-- Team -->
+      <div class="team-block">
+        <div class="section-head reveal">
+          <p class="section-tag">The People</p>
+          <h2>Meet Our Team</h2>
+          <p class="section-sub">A small multidisciplinary team of engineers and researchers,
+            guided by an experienced mentor.</p>
+        </div>
+        <div class="team-grid">
+          <div class="team-card mentor-card reveal">
+            <div class="team-photo">
+              <img src="https://i.pravatar.cc/300?img=60" alt="Mentor" loading="lazy" />
+            </div>
+            <span class="badge">Mentor</span>
+            <h4>Dr. Mentor Name</h4>
+            <p>Project Mentor &amp; Guide</p>
+          </div>
+          <div class="team-card reveal">
+            <div class="team-photo">
+              <img src="https://i.pravatar.cc/300?img=12" alt="Team member" loading="lazy" />
+            </div>
+            <span class="badge badge-member">Member</span>
+            <h4>Team Member One</h4>
+            <p>Hardware &amp; IoT Development</p>
+          </div>
+          <div class="team-card reveal">
+            <div class="team-photo">
+              <img src="https://i.pravatar.cc/300?img=32" alt="Team member" loading="lazy" />
+            </div>
+            <span class="badge badge-member">Member</span>
+            <h4>Team Member Two</h4>
+            <p>Cloud &amp; Backend Engineering</p>
+          </div>
+          <div class="team-card reveal">
+            <div class="team-photo">
+              <img src="https://i.pravatar.cc/300?img=47" alt="Team member" loading="lazy" />
+            </div>
+            <span class="badge badge-member">Member</span>
+            <h4>Team Member Three</h4>
+            <p>Data Analytics &amp; Dashboard</p>
+          </div>
+          <div class="team-card reveal">
+            <div class="team-photo">
+              <img src="https://i.pravatar.cc/300?img=68" alt="Team member" loading="lazy" />
+            </div>
+            <span class="badge badge-member">Member</span>
+            <h4>Team Member Four</h4>
+            <p>UI/UX &amp; Field Deployment</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SOLUTION ============ -->
+  <section class="solution page-section" id="solution">
+    <div class="solution-overlay"></div>
+    <div class="container solution-content">
+      <div class="section-head light reveal">
+        <p class="section-tag">What We Built</p>
+        <h2>Our Solution</h2>
+        <p class="section-sub">Start reducing food waste with IoT based real-time monitoring
+          through an easy-to-use interface.</p>
+      </div>
+
+      <div class="solution-grid">
+        <div class="sol-card reveal">
+          <div class="sol-icon"><svg class="pic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect class="duo-fill" x="3.5" y="12.5" width="17" height="8" rx="2.2"/><rect x="3.5" y="12.5" width="17" height="8" rx="2.2"/><path d="M7.5 12.5a4.5 4.5 0 0 1 9 0"/><path d="M9.5 16.5h5"/></svg></div>
+          <h3>IoT Waste Scale</h3>
+          <p>Data collection is fully automated using a wireless-network connected Waste Scale —
+            no manual recording, no pen and paper.</p>
+        </div>
+        <div class="sol-card reveal">
+          <div class="sol-icon"><svg class="pic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="duo-fill" d="M12 12V3a9 9 0 0 1 9 9z"/><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.6"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/></svg></div>
+          <h3>Real-Time Monitoring</h3>
+          <p>Food waste is measured and monitored in real time through an easy-to-use interface,
+            right where it is generated.</p>
+        </div>
+        <div class="sol-card reveal">
+          <div class="sol-icon"><svg class="pic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="duo-fill" d="M7 18.5a4.5 4.5 0 1 1 .9-8.9A6 6 0 0 1 19.5 11 3.75 3.75 0 0 1 18.5 18.5z"/><path d="M7 18.5a4.5 4.5 0 1 1 .9-8.9A6 6 0 0 1 19.5 11 3.75 3.75 0 0 1 18.5 18.5z"/><path d="M12 16.5v-5"/><path d="M9.8 13.5 12 11.3l2.2 2.2"/></svg></div>
+          <h3>Cloud Data Storage</h3>
+          <p>Data is visualized live and stored continuously in a cloud service — secure,
+            accessible and always up to date.</p>
+        </div>
+        <div class="sol-card reveal">
+          <div class="sol-icon"><svg class="pic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse class="duo-fill" cx="12" cy="6" rx="7" ry="3"/><path d="M19 6c0 1.66-3.13 3-7 3S5 7.66 5 6s3.13-3 7-3 7 1.34 7 3z"/><path d="M5 6v6c0 1.66 3.13 3 7 3s7-1.34 7-3V6"/><path d="M5 12v6c0 1.66 3.13 3 7 3s7-1.34 7-3v-6"/></svg></div>
+          <h3>Centralized Platform</h3>
+          <p>All records are centralized in one platform for data analysis across kitchens,
+            hostels and dining facilities.</p>
+        </div>
+        <div class="sol-card reveal">
+          <div class="sol-icon"><svg class="pic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle class="duo-fill" cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="9"/><path d="M9 8.2h6"/><path d="M9 10.7h6"/><path d="M10.6 8.2c3.1 0 3.1 4.6-1 4.6l4.4 3.9"/></svg></div>
+          <h3>Know Your Waste</h3>
+          <p>Know the exact amount, monetary value and carbon footprint of the food
+            being wasted every single day.</p>
+        </div>
+        <div class="sol-card reveal">
+          <div class="sol-icon"><svg class="pic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="duo-fill" d="M12 3.2a5.6 5.6 0 0 1 3.4 10.1c-.6.5-1 1.2-1.1 2H9.7c-.1-.8-.5-1.5-1.1-2A5.6 5.6 0 0 1 12 3.2z"/><path d="M12 3.2a5.6 5.6 0 0 1 3.4 10.1c-.6.5-1 1.2-1.1 2H9.7c-.1-.8-.5-1.5-1.1-2A5.6 5.6 0 0 1 12 3.2z"/><path d="M9.6 18h4.8"/><path d="M10.5 20.6h3"/></svg></div>
+          <h3>Smarter Planning</h3>
+          <p>Use waste insights to optimize production and take waste into account
+            while planning the menu.</p>
+        </div>
+      </div>
+
+      <!-- Workflow -->
+      <div class="workflow reveal">
+        <h3 class="workflow-title">How It Works</h3>
+        <div class="workflow-steps">
+          <div class="wf-step">
+            <span class="wf-num">1</span>
+            <h4>Weigh</h4>
+            <p>Food waste is placed on the smart Waste Scale</p>
+          </div>
+          <div class="wf-arrow">→</div>
+          <div class="wf-step">
+            <span class="wf-num">2</span>
+            <h4>Transmit</h4>
+            <p>Data is sent over the wireless network automatically</p>
+          </div>
+          <div class="wf-arrow">→</div>
+          <div class="wf-step">
+            <span class="wf-num">3</span>
+            <h4>Store &amp; Analyze</h4>
+            <p>Cloud service stores and processes the data continuously</p>
+          </div>
+          <div class="wf-arrow">→</div>
+          <div class="wf-step">
+            <span class="wf-num">4</span>
+            <h4>Act</h4>
+            <p>Insights drive menu planning and waste reduction</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Technology Stack -->
+      <div class="tech-stack reveal">
+        <h3 class="workflow-title">Technology Behind WasteWise</h3>
+        <div class="tech-grid">
+          <div class="tech-item"><span><svg class="pic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="7" width="10" height="10" rx="2"/><path d="M9 2.5v3M15 2.5v3M9 18.5v3M15 18.5v3M2.5 9h3M2.5 15h3M18.5 9h3M18.5 15h3"/></svg></span><h4>Load-Cell Waste Scale</h4><p>Precision weighing hardware built for messy kitchen environments</p></div>
+          <div class="tech-item"><span><svg class="pic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 9.5a15 15 0 0 1 19 0"/><path d="M5.7 13a10 10 0 0 1 12.6 0"/><path d="M8.8 16.3a5.5 5.5 0 0 1 6.4 0"/><circle cx="12" cy="19.5" r="1.3" fill="currentColor" stroke="none"/></svg></span><h4>Wireless Connectivity</h4><p>Wi-Fi enabled microcontroller streams every reading instantly</p></div>
+          <div class="tech-item"><span><svg class="pic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 18.5a4.5 4.5 0 1 1 .9-8.9A6 6 0 0 1 19.5 11 3.75 3.75 0 0 1 18.5 18.5z"/></svg></span><h4>Cloud Platform</h4><p>Continuous data storage with secure, centralized access</p></div>
+          <div class="tech-item"><span><svg class="pic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 3.5V20.5h17"/><path d="M7 14.5l4-4.5 3 3 5.5-6.5"/></svg></span><h4>Analytics Dashboard</h4><p>Live visualization of amount, value and footprint of waste</p></div>
+        </div>
+      </div>
+
+      <!-- Impact -->
+      <div class="impact reveal">
+        <h3 class="workflow-title">The Impact</h3>
+        <div class="impact-grid">
+          <div class="impact-card">
+            <h4><svg class="pic inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.6"/><path d="M6.5 12h.01"/><path d="M17.5 12h.01"/></svg> Financial Returns</h4>
+            <p>Hotels, restaurants and food retailers earn measurable financial returns by investing
+              in food waste reduction — waste tracked is money saved.</p>
+          </div>
+          <div class="impact-card">
+            <h4><svg class="pic inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 21C6 12 10 6.5 20 4.5c-1 10-5.5 14.5-12 14.5"/><path d="M6 21c1.5-5 4.5-8.5 9-11.5"/></svg> Environmental Gains</h4>
+            <p>Every kilogram of food saved means less water, energy and land wasted — and a
+              smaller carbon footprint for every meal served.</p>
+          </div>
+          <div class="impact-card">
+            <h4><svg class="pic inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2 8l10 5 10-5z"/><path d="M6 10.5V16c0 1.5 2.7 3 6 3s6-1.5 6-3v-5.5"/></svg> Institutional Change</h4>
+            <p>From hostel messes to campus canteens, data-driven kitchens serve better food
+              with less surplus — building a culture of mindful consumption.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ GALLERY ============ -->
+  <section class="gallery section-bg-light page-section" id="gallery">
+    <div class="container">
+      <div class="section-head reveal">
+        <p class="section-tag">In Pictures</p>
+        <h2>Gallery</h2>
+        <p class="section-sub">A glimpse of our journey — prototypes, field visits and the team at work.</p>
+      </div>
+      <div class="gallery-grid">
+        <figure class="gallery-item reveal"><img src="https://picsum.photos/seed/foodtech1/800/600" alt="Gallery photo 1" loading="lazy" /><figcaption>Prototype Development</figcaption></figure>
+        <figure class="gallery-item reveal"><img src="https://picsum.photos/seed/foodtech2/800/600" alt="Gallery photo 2" loading="lazy" /><figcaption>Waste Scale Testing</figcaption></figure>
+        <figure class="gallery-item tall reveal"><img src="https://picsum.photos/seed/foodtech3/800/1100" alt="Gallery photo 3" loading="lazy" /><figcaption>Field Deployment</figcaption></figure>
+        <figure class="gallery-item reveal"><img src="https://picsum.photos/seed/foodtech4/800/600" alt="Gallery photo 4" loading="lazy" /><figcaption>Team Workshop</figcaption></figure>
+        <figure class="gallery-item reveal"><img src="https://picsum.photos/seed/foodtech5/800/600" alt="Gallery photo 5" loading="lazy" /><figcaption>Hostel Mess Survey</figcaption></figure>
+        <figure class="gallery-item wide reveal"><img src="https://picsum.photos/seed/foodtech6/1200/600" alt="Gallery photo 6" loading="lazy" /><figcaption>Data Review Session</figcaption></figure>
+        <figure class="gallery-item reveal"><img src="https://picsum.photos/seed/foodtech7/800/600" alt="Gallery photo 7" loading="lazy" /><figcaption>Sensor Calibration</figcaption></figure>
+        <figure class="gallery-item reveal"><img src="https://picsum.photos/seed/foodtech8/800/600" alt="Gallery photo 8" loading="lazy" /><figcaption>Campus Awareness Drive</figcaption></figure>
+      </div>
+      <p class="gallery-note reveal">* Placeholder images — real project photos coming soon.</p>
+    </div>
+  </section>
+
+  <!-- ============ DASHBOARD ============ -->
+  <section class="dashboard dw-section page-section" id="dashboard">
+    <div class="container dashboard-content">
+
+      <!-- ===== LOGIN GATE ===== -->
+      <div class="dash-login reveal" id="dashLogin">
+        <div class="login-card dw-login-card">
+          <div class="login-logo"><svg class="pic logo-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21v-9"/><path d="M12 12C12 7.2 8.2 4 3.5 4 3.5 9 7.2 12 12 12z"/><path d="M12 12c0-3.8 3-6.3 8.5-6.3C20 10.3 16.8 12 12 12z"/></svg> Waste<b>Wise</b></div>
+          <h3>Admin Sign In</h3>
+          <p class="login-sub">Sign in to access the food waste monitoring dashboard</p>
+          <form id="loginForm" class="login-form">
+            <label>Username
+              <input type="text" id="loginUser" placeholder="username" autocomplete="username" required />
+            </label>
+            <label>Password
+              <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password" required />
+            </label>
+            <button type="submit" class="btn btn-primary">Sign In</button>
+            <p class="login-err" id="loginErr" hidden></p>
+          </form>
+          <p class="login-hint" id="loginHint" hidden></p>
+        </div>
+      </div>
+
+      <!-- ===== DASHBOARD APP (after login) ===== -->
+      <div class="dash-app reveal" id="dashApp" hidden>
+
+        <!-- Header row -->
+        <div class="dw-head">
+          <div class="dw-head-titles">
+            <h2>Food waste monitor</h2>
+            <p>Real-time sustainability metrics across IIT Guwahati Campus</p>
+          </div>
+          <div class="dw-head-right">
+            <label class="dw-select-label" for="facilitySelect">Select Hostel Facility</label>
+            <div class="dw-select-row">
+              <select id="facilitySelect" class="dw-select"></select>
+              <button class="dw-icon-btn" id="dashRefresh" title="Refresh now">⟳</button>
+              <button class="dw-icon-btn danger" id="dashLogout" title="Sign out">⎋</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="dash-banner dw-banner" id="dashBanner" hidden></div>
+
+        <!-- KPI cards -->
+        <div class="dw-kpis">
+          <div class="dw-kpi">
+            <div class="dw-kpi-top">
+              <span class="dw-ico green"><svg class="pic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M9 7V4.5h6V7"/><path d="M6 7l1 14h10l1-14"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></span>
+              <span class="dw-pill" id="kWasteBadge">+0.0%</span>
+            </div>
+            <p class="dw-label">Waste Today</p>
+            <h3 class="dw-value"><span id="kWaste">0.0</span> <small>kg</small></h3>
+          </div>
+          <div class="dw-kpi">
+            <div class="dw-kpi-top">
+              <span class="dw-ico blue"><svg class="pic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.6"/><path d="M6.5 12h.01"/><path d="M17.5 12h.01"/></svg></span>
+              <span class="dw-pill red" id="kValueBadge">—</span>
+            </div>
+            <p class="dw-label">Value Lost (est.)</p>
+            <h3 class="dw-value"><span id="kValue">0</span> <small>INR</small></h3>
+          </div>
+          <div class="dw-kpi">
+            <div class="dw-kpi-top">
+              <span class="dw-ico teal"><svg class="pic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 21C6 12 10 6.5 20 4.5c-1 10-5.5 14.5-12 14.5"/><path d="M6 21c1.5-5 4.5-8.5 9-11.5"/></svg></span>
+              <span class="dw-pill" id="kCo2Badge">Neutral</span>
+            </div>
+            <p class="dw-label">CO2e Footprint</p>
+            <h3 class="dw-value"><span id="kCo2">0.0</span> <small>tons</small></h3>
+          </div>
+          <div class="dw-kpi">
+            <div class="dw-kpi-top">
+              <span class="dw-ico navy"><svg class="pic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M5 20.5a7 7 0 0 1 14 0"/></svg></span>
+              <span class="dw-pill dark" id="kCapitaBadge">—</span>
+            </div>
+            <p class="dw-label">Per Capita Waste</p>
+            <h3 class="dw-value"><span id="kCapita">0</span> <small>grams</small></h3>
+          </div>
+        </div>
+
+        <!-- Main 2-column grid -->
+        <div class="dw-main">
+          <div class="dw-left">
+            <!-- Hostel Performance Matrix -->
+            <div class="dw-card">
+              <div class="dw-card-head">
+                <h4>Hostel Performance Matrix</h4>
+                <button class="dw-link-btn" id="exportCsv">⤓ Export CSV</button>
+              </div>
+              <table class="dw-table">
+                <thead>
+                  <tr><th>Hostel</th><th>Status</th><th>Waste Today (kg)</th><th>Per Head (g)</th><th>7D Trend</th></tr>
+                </thead>
+                <tbody id="matrixBody">
+                  <tr><td colspan="5" class="dw-empty">Loading…</td></tr>
+                </tbody>
+              </table>
+              <button class="dw-viewall" id="viewAllBtn">View All 14 Hostels</button>
+            </div>
+
+            <!-- Meal bins -->
+            <div class="dw-bins" id="dwBins">
+              <div class="dw-bin"><p class="dw-bin-label">…</p></div>
+              <div class="dw-bin"><p class="dw-bin-label">…</p></div>
+              <div class="dw-bin"><p class="dw-bin-label">…</p></div>
+            </div>
+          </div>
+
+          <div class="dw-right">
+            <!-- 30-day trend -->
+            <div class="dw-card">
+              <div class="dw-card-head">
+                <h4>30-day Waste Trend</h4>
+                <span class="dw-pill dark" id="trendTotal">TOTAL: 0t</span>
+              </div>
+              <svg id="trendChart" viewBox="0 0 320 150" preserveAspectRatio="none" aria-label="30 day waste trend"></svg>
+              <div class="dw-axis" id="trendAxis"><span>—</span><span>—</span><span>—</span></div>
+            </div>
+
+            <!-- Weekly meal breakdown -->
+            <div class="dw-card">
+              <div class="dw-card-head"><h4>Weekly Meal Breakdown</h4></div>
+              <div class="dw-stacked" id="mealChart"></div>
+              <div class="dw-legend">
+                <span><i class="lg-navy"></i>Breakfast</span>
+                <span><i class="lg-blue"></i>Lunch</span>
+                <span><i class="lg-green"></i>Dinner</span>
+              </div>
+            </div>
+
+            <!-- Manual entry (only if a Write key is set) -->
+            <div class="dw-card dw-manual" id="dashManual" hidden>
+              <div class="dw-card-head"><h4>Log a Reading</h4></div>
+              <p class="dw-manual-note">Sends a test reading to ThingSpeak for a hostel.</p>
+              <form id="manualForm" class="dw-manual-form">
+                <input type="number" step="0.01" min="0" id="manualWeight" placeholder="Weight (kg)" required />
+                <select id="manualHostel" class="dw-select"></select>
+                <button type="submit" class="btn btn-primary">Send</button>
+                <span class="dw-manual-msg" id="manualMsg"></span>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <p class="dw-note" id="dashNote">Last updated: —</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CONTACT ============ -->
+  <section class="contact section-bg-light page-section" id="contact">
+    <div class="container">
+      <div class="section-head reveal">
+        <p class="section-tag">Get In Touch</p>
+        <h2>Contact Us</h2>
+        <p class="section-sub">Interested in deploying WasteWise at your institution, or want to collaborate? We'd love to hear from you.</p>
+      </div>
+      <div class="contact-wrap">
+        <div class="contact-info reveal">
+          <div class="c-item">
+            <div class="c-icon"><svg class="pic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21.5S5 15.7 5 10a7 7 0 0 1 14 0c0 5.7-7 11.5-7 11.5z"/><circle cx="12" cy="10" r="2.6"/></svg></div>
+            <div><h4>Address</h4><p>TIDF Research Building,<br />IIT Guwahati, Assam — 781039</p></div>
+          </div>
+          <div class="c-item">
+            <div class="c-icon"><svg class="pic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 7.5 12 13.5l8.5-6"/></svg></div>
+            <div><h4>Email</h4><p>foodwatch@iitg.ac.in</p></div>
+          </div>
+          <div class="c-item">
+            <div class="c-icon"><svg class="pic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 4h3.5l1.8 4.6-2.3 1.6a12.5 12.5 0 0 0 5.3 5.3l1.6-2.3L20 15v3.5a2 2 0 0 1-2.2 2A16 16 0 0 1 3.5 6.2 2 2 0 0 1 5.5 4z"/></svg></div>
+            <div><h4>Phone</h4><p>+91 XXXXX XXXXX</p></div>
+          </div>
+          <div class="c-item">
+            <div class="c-icon"><svg class="pic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5.2l3.4 2"/></svg></div>
+            <div><h4>Working Hours</h4><p>Mon – Fri, 9:00 AM – 6:00 PM IST</p></div>
+          </div>
+        </div>
+        <form class="contact-form reveal" id="contactForm">
+          <div class="form-row">
+            <input type="text" placeholder="Your Name" required />
+            <input type="email" placeholder="Your Email" required />
+          </div>
+          <input type="text" placeholder="Subject" required />
+          <textarea rows="5" placeholder="Your Message" required></textarea>
+          <button type="submit" class="btn btn-primary">Send Message</button>
+          <p class="form-msg" id="formMsg"></p>
+        </form>
+      </div>
+
+      <!-- FAQ -->
+      <div class="faq reveal">
+        <h3>Frequently Asked Questions</h3>
+        <details>
+          <summary>How does the Waste Scale work?</summary>
+          <p>The Waste Scale is a load-cell based weighing platform connected to a Wi-Fi enabled
+            microcontroller. Whenever food waste is placed on it, the weight is recorded automatically
+            and transmitted to the cloud — no manual entry needed.</p>
+        </details>
+        <details>
+          <summary>Can WasteWise be installed in an existing kitchen or mess?</summary>
+          <p>Yes. The system is designed to fit into existing workflows — the scale simply replaces
+            the regular waste bin stand, and the dashboard can be accessed from any browser.</p>
+        </details>
+        <details>
+          <summary>What kind of insights does the dashboard provide?</summary>
+          <p>The dashboard shows the amount, estimated monetary value and carbon footprint of waste in
+            real time, along with daily, weekly and monthly trends, category-wise breakdowns and
+            progress against reduction targets.</p>
+        </details>
+        <details>
+          <summary>Who can I contact for a pilot deployment?</summary>
+          <p>Use the form above or write to us at foodwatch@iitg.ac.in — we're actively looking for
+            partner institutions for pilot programs.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div class="f-brand">
+        <a href="#home" class="logo">
+          <span class="logo-mark"><svg class="pic logo-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21v-9"/><path d="M12 12C12 7.2 8.2 4 3.5 4 3.5 9 7.2 12 12 12z"/><path d="M12 12c0-3.8 3-6.3 8.5-6.3C20 10.3 16.8 12 12 12z"/></svg></span>
+          <span class="logo-text light">Waste<span>Wise</span></span>
+        </a>
+        <p>IoT based real-time food waste monitoring system to measure, monitor and reduce food waste.</p>
+        <p class="f-tih">An initiative supported by <strong>IITG TIH</strong></p>
+      </div>
+      <div class="f-links">
+        <h4>Quick Links</h4>
+        <a href="#home">Home</a>
+        <a href="#about">About</a>
+        <a href="#solution">Solution</a>
+        <a href="#gallery">Gallery</a>
+      </div>
+      <div class="f-links">
+        <h4>More</h4>
+        <a href="#dashboard">Dashboard</a>
+        <a href="#contact">Contact Us</a>
+      </div>
+      <div class="f-links">
+        <h4>Location</h4>
+        <p class="f-addr">TIDF Research Building,<br />IIT Guwahati,<br />Assam — 781039, India</p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="container">
+        <p>© 2026 WasteWise · IITG TIH · All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="script.js"></script>
+  <script src="dashboard.js"></script>
+</body>
+</html>
