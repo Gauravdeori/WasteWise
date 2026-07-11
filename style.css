@@ -154,7 +154,7 @@ h1, h2, h3, h4 { font-family: var(--font-head); line-height: 1.2; }
 
 .hero-logos {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   gap: 20px;
   margin-bottom: 25px;
