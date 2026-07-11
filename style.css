@@ -1561,6 +1561,9 @@ section.page-section.active:not(.hero) {
   font-weight: 500;
   color: var(--ink);
   transition: border-color .25s ease, transform .25s ease, box-shadow .25s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 .audience-chips span:hover {
   border-color: var(--green-400);
