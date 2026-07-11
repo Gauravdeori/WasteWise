@@ -68,12 +68,14 @@ if (initial && document.getElementById(initial)?.classList.contains('page-sectio
 hamburger.addEventListener('click', () => {
   hamburger.classList.toggle('open');
   navLinks.classList.toggle('open');
+  navbar.classList.toggle('menu-open');
 });
 
 navLinks.querySelectorAll('a').forEach(link => {
   link.addEventListener('click', () => {
     hamburger.classList.remove('open');
     navLinks.classList.remove('open');
+    navbar.classList.remove('menu-open');
   });
 });
 

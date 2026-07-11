@@ -1853,3 +1853,12 @@ section.page-section.active:not(.hero) {
   .f-brand p { text-align: center; margin: 16px auto; }
   .f-brand { display: flex; flex-direction: column; align-items: center; }
 }
+
+
+/* Fix Mobile Menu Logo Visibility */
+.navbar.menu-open .logo { z-index: 110; }
+.navbar.menu-open .logo-text, .navbar.menu-open .logo-text span { color: #fff !important; }
+.navbar.menu-open .logo-mark { color: var(--lime) !important; }
+.hamburger { z-index: 110; position: relative; }
+.nav-links { z-index: 100; }
+
