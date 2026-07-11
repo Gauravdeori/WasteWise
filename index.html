@@ -456,125 +456,126 @@
       <!-- ===== DASHBOARD APP (after login) ===== -->
       <div class="dash-app reveal" id="dashApp" hidden>
 
-        <!-- Header row -->
-        <div class="dw-head">
-          <div class="dw-head-titles">
-            <h2>Food waste monitor</h2>
-            <p>Real-time sustainability metrics across IIT Guwahati Campus</p>
-          </div>
-          <div class="dw-head-right">
-            <label class="dw-select-label" for="facilitySelect">Select Hostel Facility</label>
-            <div class="dw-select-row">
-              <select id="facilitySelect" class="dw-select"></select>
-              <button class="dw-icon-btn" id="dashRefresh" title="Refresh now">⟳</button>
-              <button class="dw-icon-btn danger" id="dashLogout" title="Sign out">⎋</button>
+        <!-- Top status bar -->
+        <header class="bn-topbar">
+          <div class="bn-brand">
+            <span class="bn-brand-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21v-9"/><path d="M12 12C12 7.2 8.2 4 3.5 4 3.5 9 7.2 12 12 12z"/><path d="M12 12c0-3.8 3-6.3 8.5-6.3C20 10.3 16.8 12 12 12z"/></svg></span>
+            <div>
+              <h2>IITG Waste Monitor</h2>
+              <p>Real-time Food Waste Monitoring System</p>
             </div>
           </div>
-        </div>
+          <div class="bn-top-cells">
+            <div class="bn-cell">
+              <span class="bn-dot" id="sessDot"></span>
+              <div><b id="sessTitle">Checking session…</b><p id="sessRange">—</p></div>
+            </div>
+            <div class="bn-cell">
+              <svg class="bn-cell-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5.2l3.4 2"/></svg>
+              <div><b id="clockTime">—:—:—</b><p id="clockDate">—</p></div>
+            </div>
+            <div class="bn-cell">
+              <svg class="bn-cell-ico green" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 9.5a15 15 0 0 1 19 0"/><path d="M5.7 13a10 10 0 0 1 12.6 0"/><path d="M8.8 16.3a5.5 5.5 0 0 1 6.4 0"/><circle cx="12" cy="19.5" r="1.3" fill="currentColor" stroke="none"/></svg>
+              <div><b>Active Devices</b><p id="devCount">— / — Online</p></div>
+            </div>
+            <div class="bn-cell">
+              <svg class="bn-cell-ico green" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M5 20.5a7 7 0 0 1 14 0"/></svg>
+              <div><b>All Systems</b><p class="bn-ok" id="sysState">Operational</p></div>
+            </div>
+          </div>
+          <div class="bn-top-actions">
+            <button class="bn-iconbtn" id="bellBtn" title="Alerts">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6.5 2 6.5H4S6 14 6 9z"/><path d="M10 20a2.2 2.2 0 0 0 4 0"/></svg>
+              <span class="bn-badge" id="bellCount" hidden>0</span>
+            </button>
+            <button class="bn-iconbtn" id="dashRefresh" title="Refresh now">⟳</button>
+            <button class="bn-iconbtn danger" id="dashLogout" title="Sign out">⎋</button>
+          </div>
+        </header>
 
         <div class="dash-banner dw-banner" id="dashBanner" hidden></div>
 
-        <!-- KPI cards -->
-        <div class="dw-kpis">
-          <div class="dw-kpi">
-            <div class="dw-kpi-top">
-              <span class="dw-ico green"><svg class="pic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16"/><path d="M9 7V4.5h6V7"/><path d="M6 7l1 14h10l1-14"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></span>
-              <span class="dw-pill" id="kWasteBadge">+0.0%</span>
+        <!-- Bento grid: left rail | center | right rail -->
+        <div class="bn-grid">
+          <aside class="bn-rail" id="railLeft"></aside>
+
+          <main class="bn-center">
+            <section class="bn-card bn-head-card">
+              <div class="bn-head-row">
+                <button class="bn-back" id="btnOverview" hidden>← Overview</button>
+                <div class="bn-head-titles">
+                  <h3 id="bnTitle">Institute Overview Dashboard</h3>
+                  <p id="bnSub">Real-time overview of food waste across all IIT Guwahati hostels</p>
+                </div>
+                <span class="bn-scope-chip" id="bnScopeBadge" hidden></span>
+              </div>
+              <div class="bn-kpis" id="bnKpis"></div>
+            </section>
+
+            <div class="bn-mid">
+              <section class="bn-card bn-trend-card">
+                <div class="bn-card-head">
+                  <h4>Waste Trend <small id="trendDaysLbl">(30 Days)</small></h4>
+                  <select id="trendRange" class="bn-mini-select">
+                    <option value="30">30 Days</option>
+                    <option value="14">14 Days</option>
+                    <option value="7">7 Days</option>
+                  </select>
+                </div>
+                <svg id="bnTrend" viewBox="0 0 460 190" preserveAspectRatio="none" aria-label="Waste trend"></svg>
+                <div class="bn-axis" id="bnTrendAxis"></div>
+              </section>
+
+              <section class="bn-card bn-donut-card">
+                <div class="bn-card-head"><h4>Waste by Meal <small>(This Week)</small></h4></div>
+                <div class="bn-donut-wrap">
+                  <svg id="bnDonut" viewBox="0 0 42 42" aria-label="Waste by meal"></svg>
+                  <div class="bn-donut-legend" id="bnDonutLegend"></div>
+                </div>
+              </section>
+
+              <section class="bn-card bn-scales-card">
+                <div class="bn-card-head"><h4>Live Scale Readings</h4></div>
+                <div class="bn-scales" id="bnScales"></div>
+              </section>
             </div>
-            <p class="dw-label">Waste Today</p>
-            <h3 class="dw-value"><span id="kWaste">0.0</span> <small>kg</small></h3>
-          </div>
-          <div class="dw-kpi">
-            <div class="dw-kpi-top">
-              <span class="dw-ico blue"><svg class="pic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2"/><circle cx="12" cy="12" r="2.6"/><path d="M6.5 12h.01"/><path d="M17.5 12h.01"/></svg></span>
-              <span class="dw-pill red" id="kValueBadge">—</span>
+
+            <div class="bn-insights" id="bnInsights"></div>
+
+            <div class="bn-low">
+              <section class="bn-card bn-ai-card">
+                <div class="bn-ai-head">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4l1.6 4.4L18 10l-4.4 1.6L12 16l-1.6-4.4L6 10l4.4-1.6z"/><path d="M18.6 15.6l.7 1.9 1.9.7-1.9.7-.7 1.9-.7-1.9-1.9-.7 1.9-.7z"/></svg>
+                  <h4>Smart Recommendation</h4>
+                </div>
+                <p id="aiText">Analyzing today's data…</p>
+                <button class="bn-link" id="aiMore">View Details →</button>
+                <p class="bn-ai-detail" id="aiDetail" hidden></p>
+              </section>
+
+              <section class="bn-card">
+                <div class="bn-card-head"><h4>System Status</h4></div>
+                <div class="bn-system" id="bnSystem"></div>
+              </section>
+
+              <section class="bn-card">
+                <div class="bn-card-head"><h4>Recent Alerts</h4></div>
+                <div class="bn-alerts" id="bnAlerts"></div>
+                <button class="bn-link" id="alertsMore" hidden>View all alerts →</button>
+              </section>
+
+              <section class="bn-card">
+                <div class="bn-card-head"><h4 id="bnT5Title">Top 5 Hostels <small>(By Waste Today)</small></h4></div>
+                <div class="bn-top5" id="bnTop5"></div>
+              </section>
             </div>
-            <p class="dw-label">Value Lost (est.)</p>
-            <h3 class="dw-value"><span id="kValue">0</span> <small>INR</small></h3>
-          </div>
-          <div class="dw-kpi">
-            <div class="dw-kpi-top">
-              <span class="dw-ico teal"><svg class="pic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 21C6 12 10 6.5 20 4.5c-1 10-5.5 14.5-12 14.5"/><path d="M6 21c1.5-5 4.5-8.5 9-11.5"/></svg></span>
-              <span class="dw-pill" id="kCo2Badge">Neutral</span>
-            </div>
-            <p class="dw-label">CO2e Footprint</p>
-            <h3 class="dw-value"><span id="kCo2">0.0</span> <small>tons</small></h3>
-          </div>
-          <div class="dw-kpi">
-            <div class="dw-kpi-top">
-              <span class="dw-ico navy"><svg class="pic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M5 20.5a7 7 0 0 1 14 0"/></svg></span>
-              <span class="dw-pill dark" id="kCapitaBadge">—</span>
-            </div>
-            <p class="dw-label">Per Capita Waste</p>
-            <h3 class="dw-value"><span id="kCapita">0</span> <small>grams</small></h3>
-          </div>
+
+            <section class="bn-card bn-strip" id="bnStrip"></section>
+            <p class="bn-foot" id="dashNote">© 2026 IIT Guwahati Waste Monitor · All rights reserved.</p>
+          </main>
+
+          <aside class="bn-rail" id="railRight"></aside>
         </div>
-
-        <!-- Main 2-column grid -->
-        <div class="dw-main">
-          <div class="dw-left">
-            <!-- Hostel Performance Matrix -->
-            <div class="dw-card">
-              <div class="dw-card-head">
-                <h4>Hostel Performance Matrix</h4>
-                <button class="dw-link-btn" id="exportCsv">⤓ Export CSV</button>
-              </div>
-              <table class="dw-table">
-                <thead>
-                  <tr><th>Hostel</th><th>Status</th><th>Waste Today (kg)</th><th>Per Head (g)</th><th>7D Trend</th></tr>
-                </thead>
-                <tbody id="matrixBody">
-                  <tr><td colspan="5" class="dw-empty">Loading…</td></tr>
-                </tbody>
-              </table>
-              <button class="dw-viewall" id="viewAllBtn">View All 14 Hostels</button>
-            </div>
-
-            <!-- Meal bins -->
-            <div class="dw-bins" id="dwBins">
-              <div class="dw-bin"><p class="dw-bin-label">…</p></div>
-              <div class="dw-bin"><p class="dw-bin-label">…</p></div>
-              <div class="dw-bin"><p class="dw-bin-label">…</p></div>
-            </div>
-          </div>
-
-          <div class="dw-right">
-            <!-- 30-day trend -->
-            <div class="dw-card">
-              <div class="dw-card-head">
-                <h4>30-day Waste Trend</h4>
-                <span class="dw-pill dark" id="trendTotal">TOTAL: 0t</span>
-              </div>
-              <svg id="trendChart" viewBox="0 0 320 150" preserveAspectRatio="none" aria-label="30 day waste trend"></svg>
-              <div class="dw-axis" id="trendAxis"><span>—</span><span>—</span><span>—</span></div>
-            </div>
-
-            <!-- Weekly meal breakdown -->
-            <div class="dw-card">
-              <div class="dw-card-head"><h4>Weekly Meal Breakdown</h4></div>
-              <div class="dw-stacked" id="mealChart"></div>
-              <div class="dw-legend">
-                <span><i class="lg-navy"></i>Breakfast</span>
-                <span><i class="lg-blue"></i>Lunch</span>
-                <span><i class="lg-green"></i>Dinner</span>
-              </div>
-            </div>
-
-            <!-- Manual entry (only if a Write key is set) -->
-            <div class="dw-card dw-manual" id="dashManual" hidden>
-              <div class="dw-card-head"><h4>Log a Reading</h4></div>
-              <p class="dw-manual-note">Sends a test reading to ThingSpeak for a hostel.</p>
-              <form id="manualForm" class="dw-manual-form">
-                <input type="number" step="0.01" min="0" id="manualWeight" placeholder="Weight (kg)" required />
-                <select id="manualHostel" class="dw-select"></select>
-                <button type="submit" class="btn btn-primary">Send</button>
-                <span class="dw-manual-msg" id="manualMsg"></span>
-              </form>
-            </div>
-          </div>
-        </div>
-
-        <p class="dw-note" id="dashNote">Last updated: —</p>
       </div>
     </div>
   </section>

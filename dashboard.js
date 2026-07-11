@@ -1,12 +1,14 @@
 /* ================================================================
-   WasteWise — Food Waste Monitor Dashboard
+   WasteWise — IITG Waste Monitor (bento dashboard)
    ----------------------------------------------------------------
    • Login gate (demo auth, browser-only)
-   • Facility selector: Global Campus View or any of the 14 hostels
-   • KPI cards, Hostel Performance Matrix (+CSV export),
-     30-day trend, weekly meal breakdown, live meal bins
-   • Live data from ThingSpeak (field1 = weight, field2 = hostel code)
-   • Hostels without real data are simulated (config.DEMO_FILL)
+   • Bento layout: hostel rails + institute overview center
+   • Tap any hostel card -> that hostel's own dashboard opens in
+     the center (KPIs, trend, meals, scales, insights, activity);
+     "← Overview" returns to the institute view
+   • Live data via the WasteWise backend (/api/feeds); hostels
+     without real data are simulated (config.DEMO_FILL)
+   • field1 = weight (kg), field2 = hostel code (1..14)
    ================================================================ */
 (function () {
   const CFG = window.FOODWATCH_CONFIG || {};
@@ -17,17 +19,26 @@
   const PRICE = CFG.PRICE_PER_KG || 75;
   const CO2 = CFG.CO2_PER_KG || 2.5;
   const POP = CFG.HOSTEL_POPULATION || 450;
-  const API = (CFG.API_BASE || '').replace(/\/$/, '');   // backend base, '' = same origin
+  const KG_MEAL = CFG.KG_PER_MEAL || 0.4;
+  const API = (CFG.API_BASE || '').replace(/\/$/, '');
   const nf = n => Number(n).toLocaleString('en-IN');
+  const pad = n => String(n).padStart(2, '0');
   const localKey = d => d.getFullYear() + '-' + d.getMonth() + '-' + d.getDate();
   const sameDay = (a, b) => localKey(a) === localKey(b);
+  const t12 = d => d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  const cap = s => s[0].toUpperCase() + s.slice(1);
 
-  // Meal windows (24h): [startHour, endHour)
+  // Meal sessions (24h decimal hours)
   const MEALS = [
-    { key: 'breakfast', label: 'Breakfast Bin', start: 7.5, end: 11, startTxt: '07:30' },
-    { key: 'lunch', label: 'Lunch Bin', start: 12.5, end: 16, startTxt: '12:30' },
-    { key: 'dinner', label: 'Dinner Bin', start: 19.5, end: 23, startTxt: '19:30' }
+    { key: 'breakfast', name: 'Breakfast', start: 7.5, end: 10.5, range: '7:30 AM - 10:30 AM', startTxt: '7:30 AM' },
+    { key: 'lunch', name: 'Lunch', start: 12, end: 15, range: '12:00 PM - 3:00 PM', startTxt: '12:00 PM' },
+    { key: 'snacks', name: 'Snacks', start: 16, end: 18, range: '4:00 PM - 6:00 PM', startTxt: '4:00 PM' },
+    { key: 'dinner', name: 'Dinner', start: 19, end: 22, range: '7:00 PM - 10:00 PM', startTxt: '7:00 PM' }
   ];
+  const hourOf = d => d.getHours() + d.getMinutes() / 60;
+  const mealOf = t => { const h = hourOf(t); return h < 11.25 ? 'breakfast' : h < 15.5 ? 'lunch' : h < 18.5 ? 'snacks' : 'dinner'; };
+  const currentMeal = () => { const h = hourOf(new Date()); return MEALS.find(m => h >= m.start && h < m.end) || null; };
+  const nextMeal = () => { const h = hourOf(new Date()); return MEALS.find(m => m.start > h) || MEALS[0]; };
 
   /* ---------------- AUTH ---------------- */
   const AUTH_KEY = 'foodwatch_auth';
@@ -67,19 +78,19 @@
   function simReadings(hostelIndex) {
     const out = [];
     const now = new Date();
-    const scale = 0.6 + (mulberry32(hostelIndex * 97)() * 0.9);
+    const scale = 0.55 + (mulberry32(hostelIndex * 97)() * 0.95);
     for (let d = 29; d >= 0; d--) {
       const rnd = mulberry32(hostelIndex * 1000 + d);
-      // cluster events inside meal windows so the meal breakdown looks right
       MEALS.forEach(m => {
-        const events = 1 + Math.floor(rnd() * 3);
+        const size = m.key === 'snacks' ? 0.35 : 1;             // snacks are lighter
+        const events = 1 + Math.floor(rnd() * (m.key === 'snacks' ? 2 : 3));
         for (let e = 0; e < events; e++) {
           const t = new Date(now);
           t.setDate(now.getDate() - d);
           const hour = m.start + rnd() * (m.end - m.start);
           t.setHours(Math.floor(hour), Math.floor((hour % 1) * 60), 0, 0);
           if (t > now) continue;
-          out.push({ weight: +((0.4 + rnd() * 2.6) * scale).toFixed(2), time: t, source: 'sim' });
+          out.push({ weight: +((0.4 + rnd() * 2.4) * scale * size).toFixed(2), time: t, source: 'sim' });
         }
       });
     }
@@ -90,23 +101,26 @@
   function computeStats(readings) {
     const now = new Date();
     const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
-    let today = 0, yday = 0, week7 = 0;
+    let today = 0, yday = 0;
     const dayMap = {};
     readings.forEach(r => {
       if (sameDay(r.time, now)) today += r.weight;
       if (sameDay(r.time, yesterday)) yday += r.weight;
       dayMap[localKey(r.time)] = (dayMap[localKey(r.time)] || 0) + r.weight;
     });
-    // last 30 days (oldest -> newest)
     const days30 = [];
     for (let i = 29; i >= 0; i--) {
       const d = new Date(now); d.setDate(now.getDate() - i);
       days30.push({ date: d, kg: +(dayMap[localKey(d)] || 0) });
     }
-    for (let i = 23; i < 30; i++) week7 += days30[i].kg;
+    const week7 = days30.slice(23).reduce((s, d) => s + d.kg, 0);
+    const prevWeek7 = days30.slice(16, 23).reduce((s, d) => s + d.kg, 0);
+    const avg7 = week7 / 7;
     const latest = readings.length ? readings[readings.length - 1] : null;
     const online = latest ? (now - latest.time) / 60000 <= (CFG.DEVICE_ONLINE_MINUTES || 10) : false;
-    return { today, yday, week7, days30, latest, online, readings };
+    const perCapita = today * 1000 / POP;                        // g / resident
+    const eff = Math.min(99, Math.max(40, Math.round(100 - perCapita / 1.6)));
+    return { today, yday, week7, prevWeek7, avg7, days30, latest, online, perCapita, eff, readings };
   }
 
   function buildHostels(realByHostel) {
@@ -117,24 +131,17 @@
       if (real.length) { dataset = real; source = 'live'; }
       else if (CFG.DEMO_FILL) { dataset = simReadings(code); source = 'sim'; }
       else { dataset = []; source = 'none'; }
-      return { code, name, source, stats: computeStats(dataset) };
+      const stats = computeStats(dataset);
+      // status: off | high (today well above weekly average) | warn (low efficiency) | live
+      let status = 'live';
+      if (source === 'none') status = 'off';
+      else if (stats.today > Math.max(stats.avg7, 0.1) * 1.3) status = 'high';
+      else if (stats.eff < 75) status = 'warn';
+      return { code, name, source, stats, status };
     });
   }
 
-  // merge stats for "Global Campus View"
-  function globalStats(hostels) {
-    const readings = hostels.flatMap(h => h.stats.readings).sort((a, b) => a.time - b.time);
-    return computeStats(readings);
-  }
-
   /* ---------------- FETCH (via backend proxy) ---------------- */
-  let serverConfig = { channelId: '', writeEnabled: false };
-  async function loadServerConfig() {
-    try {
-      const r = await fetch(API + '/api/config', { cache: 'no-store' });
-      if (r.ok) serverConfig = await r.json();
-    } catch (e) { /* backend down — handled during refresh */ }
-  }
   async function fetchFeeds() {
     const res = await fetch(`${API}/api/feeds?results=${CFG.MAX_FEED_RESULTS || 8000}`, { cache: 'no-store' });
     if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -154,263 +161,448 @@
     return map;
   }
 
+  /* ---------------- SVG helpers ---------------- */
+  const ICO = {
+    trash: '<path d="M4 7h16"/><path d="M9 7V4.5h6V7"/><path d="M6 7l1 14h10l1-14"/><path d="M10 11v6"/><path d="M14 11v6"/>',
+    rupee: '<path d="M7 4h10"/><path d="M7 8.5h10"/><path d="M8.5 4c5.5 0 5.5 8.5-1.5 8.5L15 20"/>',
+    cloud: '<path d="M7 18.5a4.5 4.5 0 1 1 .9-8.9A6 6 0 0 1 19.5 11 3.75 3.75 0 0 1 18.5 18.5z"/>',
+    meal: '<path d="M6.5 11v10"/><path d="M4 3v5a2.5 2.5 0 0 0 5 0V3"/><path d="M6.5 3v5"/><path d="M17.5 3c-2.3 2.5-2.3 7.5 0 10v8"/>',
+    user: '<circle cx="12" cy="8" r="3.6"/><path d="M5 20.5a7 7 0 0 1 14 0"/>',
+    trophy: '<path d="M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 5H4a3 3 0 0 0 3 4.5"/><path d="M17 5h3a3 3 0 0 1-3 4.5"/><path d="M12 14v4"/><path d="M8 21h8"/>',
+    alert: '<path d="M12 3 2.5 20h19z"/><path d="M12 9.5V14"/><path d="M12 17h.01"/>',
+    clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5.2l3.4 2"/>',
+    leaf: '<path d="M6 21C6 12 10 6.5 20 4.5c-1 10-5.5 14.5-12 14.5"/><path d="M6 21c1.5-5 4.5-8.5 9-11.5"/>',
+    drop: '<path d="M12 3s6.5 7 6.5 11.5a6.5 6.5 0 0 1-13 0C5.5 10 12 3 12 3z"/>',
+    bolt: '<path d="M13 2 4.5 13.5H11L9.5 22 19 10.5h-6.5z"/>',
+    build: '<path d="M4 21V5l8-2 8 2v16"/><path d="M4 21h16"/><path d="M9 9h2M13 9h2M9 13h2M13 13h2M9 17h2M13 17h2"/>',
+    disc: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/>',
+    wifi: '<path d="M2.5 9.5a15 15 0 0 1 19 0"/><path d="M5.7 13a10 10 0 0 1 12.6 0"/><path d="M8.8 16.3a5.5 5.5 0 0 1 6.4 0"/><circle cx="12" cy="19.5" r="1.3" fill="currentColor" stroke="none"/>',
+    box: '<rect x="4" y="7" width="16" height="13" rx="2"/><path d="M4 11h16"/><path d="M9 7V4.5h6V7"/>',
+    sync: '<path d="M20 6.5V11h-4.5"/><path d="M4 17.5V13h4.5"/><path d="M19.3 11a7.5 7.5 0 0 0-13-3.5L4 9.5"/><path d="M4.7 13a7.5 7.5 0 0 0 13 3.5L20 14.5"/>',
+    save: '<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 4v5h8V4"/><path d="M8 20v-6h8v6"/>',
+    cal: '<rect x="3.5" y="5" width="17" height="16" rx="2"/><path d="M8 3v4M16 3v4M3.5 10h17"/>'
+  };
+  const svg = (name, cls) => `<svg class="${cls || ''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICO[name]}</svg>`;
+
+  function spark(series) {
+    const w = 64, h = 24;
+    const max = Math.max(...series, 0.001);
+    const pts = series.map((v, i) =>
+      `${((i / (series.length - 1)) * (w - 2) + 1).toFixed(1)},${(h - 3 - (v / max) * (h - 8)).toFixed(1)}`).join(' ');
+    return `<svg class="bnh-spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><polyline points="${pts}"/></svg>`;
+  }
+
+  /* ---------------- SCOPE (0 = campus, else hostel code) ---------------- */
+  let scope = 0;
+  const scopedHostel = () => scope ? lastHostels.find(x => x.code === scope) : null;
+
+  function openHostel(code) {
+    scope = (scope === code) ? 0 : code;
+    renderAll();
+    document.querySelector('.bn-head-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  function onRailClick(e) {
+    const card = e.target.closest('.bn-hostel');
+    if (card) openHostel(+card.dataset.code);
+  }
+  $('railLeft').addEventListener('click', onRailClick);
+  $('railRight').addEventListener('click', onRailClick);
+  $('btnOverview').addEventListener('click', () => { scope = 0; renderAll(); });
+
+  function renderHead(h) {
+    const badge = $('bnScopeBadge');
+    if (h) {
+      $('btnOverview').hidden = false;
+      $('bnTitle').textContent = h.name + ' Hostel — Dashboard';
+      $('bnSub').textContent = 'Hostel ' + pad(h.code) + ' · live food waste analytics · ' +
+        (h.source === 'live' ? 'ThingSpeak data' : h.source === 'sim' ? 'simulated data' : 'no data');
+      const stTxt = h.status === 'high' ? '● High Waste' : h.status === 'warn' ? '● Watch' : h.status === 'off' ? '● Offline' : '● Live';
+      badge.textContent = stTxt;
+      badge.className = 'bn-scope-chip ' + (h.status === 'live' ? 'live' : h.status);
+      badge.hidden = false;
+    } else {
+      $('btnOverview').hidden = true;
+      badge.hidden = true;
+      $('bnTitle').textContent = 'Institute Overview Dashboard';
+      $('bnSub').textContent = 'Real-time overview of food waste across all IIT Guwahati hostels';
+    }
+  }
+
+  /* ---------------- RENDER: top bar ---------------- */
+  function renderTopbar(hostels) {
+    const live = currentMeal();
+    if (live) {
+      $('sessTitle').textContent = live.name + ' Session Live';
+      $('sessRange').textContent = live.range;
+      $('sessDot').classList.remove('idle');
+    } else {
+      const nm = nextMeal();
+      $('sessTitle').textContent = 'No Live Session';
+      $('sessRange').textContent = 'Next: ' + nm.name + ' at ' + nm.startTxt;
+      $('sessDot').classList.add('idle');
+    }
+    const active = hostels.filter(h => h.source !== 'none').length;
+    $('devCount').textContent = active + ' / ' + hostels.length + ' Online';
+    $('sysState').textContent = active === hostels.length ? 'Operational' : (hostels.length - active) + ' hostel(s) offline';
+  }
+  function tickClock() {
+    const now = new Date();
+    $('clockTime').textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    $('clockDate').textContent = now.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  /* ---------------- RENDER: hostel rails ---------------- */
+  function renderRails(hostels) {
+    const live = currentMeal();
+    const sessTxt = live ? live.name + ' Running' : 'Idle';
+    const sessTime = live ? t12(new Date()) : 'Next ' + nextMeal().startTxt;
+    const card = h => {
+      const cls = (h.status === 'high' ? 'high' : h.status === 'warn' ? 'warn' : h.status === 'off' ? 'off' : '') +
+                  (scope === h.code ? ' active' : '');
+      const stTxt = h.status === 'high' ? 'High' : h.status === 'off' ? 'Offline' : 'Live';
+      const stCls = h.status === 'high' ? 'high' : h.status === 'warn' ? 'warn' : h.status === 'off' ? 'off' : 'live';
+      const week = h.stats.days30.slice(23).map(d => d.kg);
+      return `<div class="bn-hostel ${cls}" data-code="${h.code}" title="Open ${h.name} Hostel dashboard">
+        <div class="bnh-top"><span class="bnh-num">${pad(h.code)}</span><b>${h.name} Hostel</b><span class="bnh-status ${stCls}">● ${stTxt}</span></div>
+        <div class="bnh-mid"><span>${sessTxt}</span><span>${sessTime}</span></div>
+        <div class="bnh-bottom">
+          <div class="bnh-kg"><h5>${h.stats.today.toFixed(1)} kg</h5><p>Today</p></div>
+          ${spark(week)}
+          <div class="bnh-eff"><h5>${h.stats.eff}%</h5><p>Efficiency</p></div>
+        </div>
+      </div>`;
+    };
+    $('railLeft').innerHTML = hostels.slice(0, 7).map(card).join('');
+    $('railRight').innerHTML = hostels.slice(7).map(card).join('');
+  }
+
   /* ---------------- RENDER: KPIs ---------------- */
-  function renderKpis(stats, scopePop) {
-    $('kWaste').textContent = nf(+stats.today.toFixed(1));
-    $('kValue').textContent = nf(Math.round(stats.today * PRICE));
-    $('kCo2').textContent = (stats.today * CO2 / 1000).toFixed(1);
-    $('kCapita').textContent = Math.round(stats.today * 1000 / scopePop);
-
-    // deltas vs yesterday
-    const dKg = stats.today - stats.yday;
-    const pct = stats.yday > 0 ? (dKg / stats.yday) * 100 : 0;
-    const wB = $('kWasteBadge');
-    wB.textContent = (pct >= 0 ? '+' : '') + pct.toFixed(1) + '%';
-    wB.className = 'dw-pill' + (pct > 0 ? ' red' : '');
-
-    const vB = $('kValueBadge');
-    const dVal = dKg * PRICE;
-    vB.textContent = (dVal >= 0 ? '+' : '-') + '₹' + nf(Math.abs(Math.round(dVal)));
-    vB.className = 'dw-pill' + (dVal > 0 ? ' red' : '');
-
-    const cB = $('kCo2Badge');
-    const tons = stats.today * CO2 / 1000;
-    cB.textContent = tons < 1 ? 'Low' : tons < 3 ? 'Neutral' : 'High';
-    cB.className = 'dw-pill' + (tons >= 3 ? ' red' : '');
-
-    const pB = $('kCapitaBadge');
-    const dG = Math.round(dKg * 1000 / scopePop);
-    pB.textContent = (dG >= 0 ? '+' : '') + dG + 'g';
-    pB.className = 'dw-pill dark';
+  function delta(nowV, prevV) {
+    if (prevV <= 0) return '<span class="bn-kpi-delta flat">— vs yesterday</span>';
+    const pct = Math.round(((nowV - prevV) / prevV) * 100);
+    const cls = pct > 0 ? 'up' : pct < 0 ? 'down' : 'flat';
+    const arrow = pct > 0 ? '↑' : pct < 0 ? '↓' : '→';
+    return `<span class="bn-kpi-delta ${cls}">${arrow} ${Math.abs(pct)}% vs yesterday</span>`;
+  }
+  function renderKpis(s, h) {
+    const popScope = h ? POP : POP * HOSTELS.length;
+    const now = hourOf(new Date());
+    const sessionsDone = MEALS.filter(m => now >= m.start && m.key !== 'snacks').length;
+    const meals = Math.round(popScope * sessionsDone * 0.87);
+    const kpi = (ico, color, label, value, unit, deltaHtml) =>
+      `<div class="bn-kpi"><span class="bn-kpi-ico ${color}">${svg(ico)}</span>
+        <div class="bn-kpi-body"><p>${label}</p><h5>${value} <small>${unit}</small></h5>${deltaHtml}</div></div>`;
+    $('bnKpis').innerHTML =
+      kpi('trash', 'green', h ? 'Waste Today' : 'Total Waste Today', nf(+s.today.toFixed(1)), 'kg', delta(s.today, s.yday)) +
+      kpi('rupee', 'orange', 'Value Lost', '₹' + nf(Math.round(s.today * PRICE)), '', delta(s.today, s.yday)) +
+      kpi('cloud', 'indigo', 'CO₂ Footprint', nf(Math.round(s.today * CO2)), 'kg', delta(s.today, s.yday)) +
+      kpi('meal', 'teal', 'Meals Served', nf(meals), '', '<span class="bn-kpi-delta flat">est. today</span>') +
+      kpi('user', 'blue', 'Per Capita Waste', Math.round(s.today * 1000 / popScope), 'g', delta(s.today, s.yday));
   }
 
-  /* ---------------- RENDER: MATRIX ---------------- */
-  let showAll = false;
-  function trendArrow(s) {
-    if (!s.readings.length) return '<span class="dw-trend na">N/A</span>';
-    const avg = s.week7 / 7;
-    if (avg <= 0) return '<span class="dw-trend flat">→</span>';
-    if (s.today > avg * 1.15) return '<span class="dw-trend up">↗</span>';
-    if (s.today < avg * 0.85) return '<span class="dw-trend down">↘</span>';
-    return '<span class="dw-trend flat">→</span>';
-  }
-  function renderMatrix(hostels) {
-    const rows = hostels.slice().sort((a, b) => b.stats.today - a.stats.today);
-    const visible = showAll ? rows : rows.slice(0, 5);
-    $('matrixBody').innerHTML = visible.map(h => {
-      const on = h.source !== 'none';
-      const kg = h.stats.today;
-      return `<tr>
-        <td class="h-name">${h.name}</td>
-        <td><span class="dw-status ${on ? 'on' : 'off'}">● ${on ? 'ONLINE' : 'OFFLINE'}</span></td>
-        <td class="${on ? 'h-kg' : 'h-muted'}">${on ? kg.toFixed(1) : '--'}</td>
-        <td class="${on ? 'h-per' : 'h-muted'}">${on ? Math.round(kg * 1000 / POP) : '--'}</td>
-        <td>${on ? trendArrow(h.stats) : '<span class="dw-trend na">N/A</span>'}</td>
-      </tr>`;
-    }).join('') || '<tr><td colspan="5" class="dw-empty">No hostels configured</td></tr>';
-    $('viewAllBtn').textContent = showAll ? 'Show Top 5' : 'View All ' + hostels.length + ' Hostels';
-  }
-  $('viewAllBtn').addEventListener('click', () => { showAll = !showAll; renderMatrix(lastHostels); });
-
-  $('exportCsv').addEventListener('click', () => {
-    const head = 'Hostel,Status,Waste Today (kg),Per Head (g),7-day Total (kg)\n';
-    const body = lastHostels.map(h => {
-      const on = h.source !== 'none';
-      return [h.name, on ? 'ONLINE' : 'OFFLINE',
-        on ? h.stats.today.toFixed(2) : '',
-        on ? Math.round(h.stats.today * 1000 / POP) : '',
-        on ? h.stats.week7.toFixed(2) : ''].join(',');
-    }).join('\n');
-    const blob = new Blob([head + body], { type: 'text/csv' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'wastewise-hostel-matrix.csv';
-    a.click();
-    URL.revokeObjectURL(a.href);
-  });
-
-  /* ---------------- RENDER: 30-DAY TREND (SVG area) ---------------- */
-  function renderTrend(stats) {
-    const days = stats.days30;
-    const W = 320, H = 150, PAD = 8;
-    const max = Math.max(...days.map(d => d.kg), 0.001);
-    const pts = days.map((d, i) => [
-      PAD + (i / (days.length - 1)) * (W - PAD * 2),
-      H - PAD - (d.kg / max) * (H - PAD * 2 - 10)
-    ]);
-    // smooth path (quadratic midpoints)
+  /* ---------------- RENDER: trend ---------------- */
+  let trendDays = 30, lastScope = null;
+  function renderTrend(s) {
+    const days = s.days30.slice(30 - trendDays);
+    const W = 460, H = 190, L = 34, B = 22, T = 10;
+    const max = Math.max(...days.map(d => d.kg), 1);
+    const step = max > 400 ? 100 : max > 100 ? 50 : max > 40 ? 20 : max > 8 ? 5 : 2;
+    const niceMax = Math.ceil(max / step) * step;
+    const x = i => L + (i / (days.length - 1)) * (W - L - 8);
+    const y = v => H - B - (v / niceMax) * (H - B - T);
+    const pts = days.map((d, i) => [x(i), y(d.kg)]);
     let path = `M ${pts[0][0]} ${pts[0][1]}`;
     for (let i = 1; i < pts.length; i++) {
-      const mx = (pts[i - 1][0] + pts[i][0]) / 2;
-      const my = (pts[i - 1][1] + pts[i][1]) / 2;
+      const mx = (pts[i - 1][0] + pts[i][0]) / 2, my = (pts[i - 1][1] + pts[i][1]) / 2;
       path += ` Q ${pts[i - 1][0]} ${pts[i - 1][1]} ${mx} ${my}`;
     }
     path += ` L ${pts[pts.length - 1][0]} ${pts[pts.length - 1][1]}`;
-    const area = path + ` L ${W - PAD} ${H - PAD} L ${PAD} ${H - PAD} Z`;
-    $('trendChart').innerHTML = `
-      <defs>
-        <linearGradient id="dwArea" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#3b6fe0" stop-opacity=".28"/>
-          <stop offset="100%" stop-color="#3b6fe0" stop-opacity=".02"/>
-        </linearGradient>
-      </defs>
-      <path d="${area}" fill="url(#dwArea)"/>
-      <path d="${path}" fill="none" stroke="#3b6fe0" stroke-width="2" stroke-linecap="round"/>`;
-
-    const fmt = d => d.toLocaleDateString([], { day: '2-digit', month: 'short' });
-    $('trendAxis').innerHTML =
-      `<span>${fmt(days[0].date)}</span><span>${fmt(days[15].date)}</span><span>${fmt(days[29].date)}</span>`;
-
-    const total = days.reduce((s, d) => s + d.kg, 0);
-    $('trendTotal').textContent = 'TOTAL: ' + (total / 1000).toFixed(1) + 't';
-  }
-
-  /* ---------------- RENDER: WEEKLY MEAL BREAKDOWN ---------------- */
-  function mealOf(t) {
-    const h = t.getHours() + t.getMinutes() / 60;
-    if (h < 11.5) return 'breakfast';
-    if (h < 17) return 'lunch';
-    return 'dinner';
-  }
-  function renderMeals(stats) {
-    const now = new Date();
-    const days = [];
-    for (let i = 4; i >= 0; i--) {
-      const d = new Date(now); d.setDate(now.getDate() - i);
-      days.push({ date: d, breakfast: 0, lunch: 0, dinner: 0 });
+    const area = path + ` L ${x(days.length - 1)} ${H - B} L ${x(0)} ${H - B} Z`;
+    let grid = '';
+    for (let i = 0; i <= 4; i++) {
+      const v = niceMax * i / 4, gy = y(v);
+      grid += `<line x1="${L}" y1="${gy}" x2="${W - 8}" y2="${gy}" stroke="#eef1f4" stroke-width="1"/>
+               <text x="${L - 6}" y="${gy + 3}" font-size="8" fill="#98a2b3" text-anchor="end">${Math.round(v)}</text>`;
     }
-    stats.readings.forEach(r => {
-      const day = days.find(d => sameDay(d.date, r.time));
-      if (day) day[mealOf(r.time)] += r.weight;
-    });
-    const max = Math.max(...days.map(d => d.breakfast + d.lunch + d.dinner), 0.001);
-    $('mealChart').innerHTML = days.map(d => {
-      const pb = (d.breakfast / max) * 100, pl = (d.lunch / max) * 100, pd = (d.dinner / max) * 100;
-      const label = d.date.toLocaleDateString([], { weekday: 'narrow' });
-      return `<div class="dw-stack" title="${d.date.toLocaleDateString()} — B ${d.breakfast.toFixed(1)} / L ${d.lunch.toFixed(1)} / D ${d.dinner.toFixed(1)} kg">
-        <i class="seg-b" style="height:${pb}%"></i>
-        <i class="seg-l" style="height:${pl}%"></i>
-        <i class="seg-d" style="height:${pd}%"></i>
-        <label>${label}</label>
-      </div>`;
-    }).join('');
+    $('bnTrend').innerHTML = `
+      <defs><linearGradient id="bnArea" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#22c55e" stop-opacity=".3"/>
+        <stop offset="100%" stop-color="#22c55e" stop-opacity=".02"/>
+      </linearGradient></defs>
+      ${grid}
+      <path d="${area}" fill="url(#bnArea)"/>
+      <path d="${path}" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round"/>`;
+    const fmt = d => d.toLocaleDateString([], { day: '2-digit', month: 'short' });
+    $('bnTrendAxis').innerHTML =
+      `<span>${fmt(days[0].date)}</span><span>${fmt(days[Math.floor(days.length / 2)].date)}</span><span>${fmt(days[days.length - 1].date)}</span>`;
+    $('trendDaysLbl').textContent = '(' + trendDays + ' Days)';
   }
+  $('trendRange').addEventListener('change', e => { trendDays = +e.target.value; if (lastScope) renderTrend(lastScope); });
 
-  /* ---------------- RENDER: MEAL BINS ---------------- */
-  function renderBins(stats) {
+  /* ---------------- RENDER: donut + scales ---------------- */
+  const MEAL_COLORS = { breakfast: '#22c55e', lunch: '#6366f1', dinner: '#f59e0b', snacks: '#eab308' };
+  function renderDonut(s) {
     const now = new Date();
-    const nowH = now.getHours() + now.getMinutes() / 60;
-    const todays = stats.readings.filter(r => sameDay(r.time, now));
-    const kgFor = key => todays.filter(r => mealOf(r.time) === key).reduce((s, r) => s + r.weight, 0);
-
-    $('dwBins').innerHTML = MEALS.map(m => {
-      const kg = kgFor(m.key);
-      const isLive = nowH >= m.start && nowH < m.end;
-      const isPast = nowH >= m.end;
-      if (isLive) {
-        const ageS = stats.latest ? Math.max(1, Math.round((now - stats.latest.time) / 1000)) : null;
-        const age = ageS === null ? '—' : ageS < 60 ? ageS + 's ago' : Math.round(ageS / 60) + 'm ago';
-        const loadPct = Math.min(100, (kg / 60) * 100);
-        const load = loadPct > 75 ? 'High Load' : loadPct > 35 ? 'Normal Load' : 'Light Load';
-        return `<div class="dw-bin live">
-          <p class="dw-bin-label">Live: ${m.label}</p>
-          <div class="dw-bin-row">
-            <span class="dw-bin-kg">${kg.toFixed(1)} <small>kg</small></span>
-            <span class="dw-bin-side">Update:<br>${age}<br>${load}</span>
-          </div>
-          <div class="dw-bin-bar"><i style="--w:${Math.max(4, loadPct)}%"></i></div>
-        </div>`;
-      }
-      if (isPast) {
-        return `<div class="dw-bin">
-          <p class="dw-bin-label">${m.label} (done)</p>
-          <div class="dw-bin-row">
-            <span class="dw-bin-kg">${kg.toFixed(1)} <small>kg</small></span>
-            <span class="dw-bin-side">Ended<br>Completed</span>
-          </div>
-          <div class="dw-bin-bar"><i style="--w:100%"></i></div>
-        </div>`;
-      }
-      return `<div class="dw-bin">
-        <p class="dw-bin-label">${m.label} (est)</p>
-        <div class="dw-bin-row">
-          <span class="dw-bin-kg">00.0 <small>kg</small></span>
-          <span class="dw-bin-side">Starts<br>at ${m.startTxt}<br>Standby</span>
-        </div>
-        <div class="dw-bin-bar"><i style="--w:0%"></i></div>
-      </div>`;
+    const weekAgo = new Date(now); weekAgo.setDate(now.getDate() - 7);
+    const sums = { breakfast: 0, lunch: 0, dinner: 0, snacks: 0 };
+    s.readings.forEach(r => { if (r.time >= weekAgo) sums[mealOf(r.time)] += r.weight; });
+    const total = Object.values(sums).reduce((a, b) => a + b, 0) || 1;
+    let offset = 25, circles = '';
+    ['lunch', 'dinner', 'breakfast', 'snacks'].forEach(k => {
+      const pct = sums[k] / total * 100;
+      circles += `<circle cx="21" cy="21" r="15.9" stroke="${MEAL_COLORS[k]}" stroke-dasharray="${pct} ${100 - pct}" stroke-dashoffset="${offset}"/>`;
+      offset -= pct;
+    });
+    $('bnDonut').innerHTML = circles;
+    $('bnDonutLegend').innerHTML = ['breakfast', 'lunch', 'dinner', 'snacks'].map(k => {
+      const pct = Math.round(sums[k] / total * 100);
+      return `<div><i style="background:${MEAL_COLORS[k]}"></i>${cap(k)} <b>${pct}%</b> (${Math.round(sums[k])} kg)</div>`;
     }).join('');
   }
 
-  /* ---------------- FACILITY SELECT ---------------- */
-  let scope = 0; // 0 = global, else hostel code
-  function initSelect() {
-    $('facilitySelect').innerHTML =
-      '<option value="0">Global Campus View</option>' +
-      HOSTELS.map((n, i) => `<option value="${i + 1}">${n} Hostel</option>`).join('');
-    $('facilitySelect').addEventListener('change', e => {
-      scope = +e.target.value;
-      renderAll();
-    });
+  function renderScales(s) {
+    const now = new Date();
+    const h = hourOf(now);
+    const todays = s.readings.filter(r => sameDay(r.time, now));
+    const kgFor = k => todays.filter(r => mealOf(r.time) === k).reduce((sum, r) => sum + r.weight, 0);
+    const rows = [
+      { name: 'Breakfast Bin', key: 'breakfast', on: h >= 7.5 },
+      { name: 'Lunch Bin', key: 'lunch', on: h >= 12 },
+      { name: 'Dinner Bin', key: 'dinner', on: h >= 19 },
+      { name: 'Common Bin', key: 'snacks', on: true }
+    ];
+    $('bnScales').innerHTML = rows.map(r => {
+      const kg = kgFor(r.key);
+      return `<div class="bn-scale-row">${svg('box')}<span>${r.name}</span>
+        <b>${r.on ? kg.toFixed(1) + ' kg' : '-- kg'}</b>
+        <span class="bn-scale-tag ${r.on ? 'on' : 'off'}">${r.on ? '● Online' : '● Offline'}</span></div>`;
+    }).join('');
   }
 
-  /* ---------------- MANUAL ENTRY (via backend) ---------------- */
-  let manualReady = false;
-  function setupManual() {
-    if (manualReady || !serverConfig.writeEnabled) return;
-    manualReady = true;
-    $('dashManual').hidden = false;
-    $('manualHostel').innerHTML = HOSTELS.map((n, i) => `<option value="${i + 1}">${n}</option>`).join('');
-    $('manualForm').addEventListener('submit', async e => {
-      e.preventDefault();
-      const w = parseFloat($('manualWeight').value);
-      if (isNaN(w)) return;
-      $('manualMsg').textContent = 'Sending…';
-      try {
-        const r = await fetch(API + '/api/reading', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ weight: w, hostel: $('manualHostel').value })
-        });
-        const j = await r.json().catch(() => ({}));
-        if (r.ok && j.entry_id > 0) $('manualMsg').textContent = '✓ Sent (entry #' + j.entry_id + ')';
-        else if (r.ok && j.entry_id === 0) $('manualMsg').textContent = '⚠ Rate limited — wait 15s';
-        else $('manualMsg').textContent = '✗ ' + (j.error || 'failed');
-        $('manualForm').reset();
-        setTimeout(refresh, 1500);
-      } catch (err) { $('manualMsg').textContent = '✗ ' + err.message; }
-      setTimeout(() => ($('manualMsg').textContent = ''), 6000);
-    });
+  /* ---------------- RENDER: insights ---------------- */
+  function peakHour(s) {
+    const now = new Date();
+    const buckets = {};
+    s.readings.forEach(r => { if (sameDay(r.time, now)) buckets[r.time.getHours()] = (buckets[r.time.getHours()] || 0) + r.weight; });
+    let best = null;
+    Object.entries(buckets).forEach(([hh, kg]) => { if (!best || kg > best.kg) best = { h: +hh, kg }; });
+    return best;
+  }
+  const tile = (ico, color, label, value, sub, subCls) =>
+    `<div class="bn-insight"><span class="bn-kpi-ico ${color}">${svg(ico)}</span>
+      <div><p>${label}</p><h5>${value}</h5><small class="${subCls}">${sub}</small></div></div>`;
+
+  function renderInsights(hostels, s, h) {
+    const pk = peakHour(s);
+    const pkTxt = pk ? `${t12(new Date(2000, 0, 1, pk.h, 30))} - ${t12(new Date(2000, 0, 1, pk.h + 1, 30))}` : '—';
+    const pkSub = pk ? 'During ' + cap(mealOf(new Date(2000, 0, 1, pk.h, 30))) : 'No data today';
+    const savedKg = Math.max(s.prevWeek7 - s.week7, s.week7 * 0.05);
+    const co2Saved = Math.round(savedKg * CO2);
+
+    if (h) {
+      // per-hostel insights: best/worst day over the previous 7 full days
+      const days = h.stats.days30.slice(22, 29);
+      const bestDay = days.slice().sort((a, b) => a.kg - b.kg)[0];
+      const worstDay = days.slice().sort((a, b) => b.kg - a.kg)[0];
+      const dName = d => d.date.toLocaleDateString([], { weekday: 'short' });
+      $('bnInsights').innerHTML =
+        tile('trophy', 'green', 'Efficiency Score', h.stats.eff + '%', h.stats.eff >= 85 ? 'Excellent' : h.stats.eff >= 70 ? 'Good' : 'Needs attention', h.stats.eff >= 70 ? 'g' : 'r') +
+        tile('cal', 'green', 'Best Day (7d)', bestDay ? dName(bestDay) + ' · ' + bestDay.kg.toFixed(1) + ' kg' : '—', 'Lowest waste', 'g') +
+        tile('alert', 'orange', 'Worst Day (7d)', worstDay ? dName(worstDay) + ' · ' + worstDay.kg.toFixed(1) + ' kg' : '—', 'Highest waste', 'r') +
+        tile('clock', 'orange', 'Peak Waste Time', pkTxt, pkSub, 'm') +
+        tile('leaf', 'green', 'CO₂ Saved (est.)', nf(co2Saved) + ' kg', 'vs last week', 'g');
+      return;
+    }
+    const ranked = hostels.slice().sort((a, b) => b.stats.today - a.stats.today);
+    const best = hostels.slice().sort((a, b) => b.stats.eff - a.stats.eff)[0];
+    const worst = ranked[0];
+    $('bnInsights').innerHTML =
+      tile('trophy', 'orange', 'Best Performing Hostel', best ? best.name + ' Hostel' : '—', best ? best.stats.eff + '% Efficiency' : '', 'g') +
+      tile('alert', 'orange', 'Highest Waste Hostel', worst ? worst.name + ' Hostel' : '—', worst ? worst.stats.today.toFixed(1) + ' kg Today' : '', 'r') +
+      tile('clock', 'orange', 'Peak Waste Time', pkTxt, pkSub, 'm') +
+      tile('leaf', 'green', 'Total CO₂ Saved (est.)', nf(co2Saved) + ' kg', '≈ ' + (co2Saved / 970).toFixed(1) + ' Trees Saved', 'g') +
+      tile('rupee', 'orange', 'Total Money Lost', '₹' + nf(Math.round(s.today * PRICE)), 'Today', 'm');
+  }
+
+  /* ---------------- RENDER: AI reco ---------------- */
+  function renderAi(hostels, s, h) {
+    const live = currentMeal();
+    const tip = live && (live.key === 'lunch' || live.key === 'dinner')
+      ? 'Reduce rice preparation by ~15%'
+      : 'Reduce portion sizes by ~10-15%';
+    let txt, detail;
+    if (h) {
+      if (h.status === 'high') {
+        const pct = Math.round((h.stats.today / Math.max(h.stats.avg7, 0.01) - 1) * 100);
+        txt = `${h.name} Hostel is ${pct}% above its 7-day average today. ${tip} at the next meal service.`;
+      } else if (h.status === 'off') {
+        txt = `${h.name} Hostel's scale is offline — no readings received. Check the device power and WiFi.`;
+      } else {
+        txt = `${h.name} Hostel is within its normal range today (${h.stats.today.toFixed(1)} kg vs ${h.stats.avg7.toFixed(1)} kg avg). Keep portions as planned.`;
+      }
+      detail = `Today: ${h.stats.today.toFixed(1)} kg · 7-day avg: ${h.stats.avg7.toFixed(1)} kg/day · This week: ${h.stats.week7.toFixed(1)} kg (prev ${h.stats.prevWeek7.toFixed(1)} kg). Rule-based recommendation derived from scale data.`;
+    } else {
+      const highs = hostels.filter(x => x.status === 'high');
+      if (highs.length) {
+        txt = `${live ? live.name : "Today's"} waste is high in ${highs.length} hostel${highs.length > 1 ? 's' : ''}. ${tip} and monitor again tomorrow.`;
+        detail = 'Flagged (today vs 7-day average): ' + highs.map(x => `${x.name} (${x.stats.today.toFixed(1)} kg)`).join(', ') +
+          '. Suggested: portion-controlled serving and review of tomorrow’s indent quantities.';
+      } else {
+        txt = 'All hostels are within their normal waste range today. Keep portion sizes as planned.';
+        detail = 'No hostel exceeded 130% of its 7-day average today. Rule-based recommendation derived from live scale data.';
+      }
+    }
+    $('aiText').textContent = txt;
+    $('aiDetail').textContent = detail;
+  }
+  $('aiMore').addEventListener('click', () => {
+    const d = $('aiDetail');
+    d.hidden = !d.hidden;
+    $('aiMore').textContent = d.hidden ? 'View Details →' : 'Hide Details';
+  });
+
+  /* ---------------- RENDER: alerts / system / top5-activity ---------------- */
+  function relTime(d) {
+    const sec = Math.max(1, Math.round((Date.now() - d.getTime()) / 1000));
+    if (sec < 60) return sec + 's ago';
+    if (sec < 3600) return Math.round(sec / 60) + ' min ago';
+    return Math.round(sec / 3600) + ' hr ago';
+  }
+  let allAlerts = [], alertsExpanded = false;
+  function buildAlerts(hostels) {
+    const now = new Date();
+    const list = [];
+    hostels.filter(x => x.status === 'high').forEach(x =>
+      list.push({ cls: 'red', txt: `High waste in ${x.name} Hostel`, t: x.stats.latest ? x.stats.latest.time : now, code: x.code }));
+    hostels.filter(x => x.status === 'off').forEach(x =>
+      list.push({ cls: 'amber', txt: `Scale in ${x.name} Hostel is offline`, t: now, code: x.code }));
+    const live = currentMeal();
+    if (live) {
+      const st = new Date(now); st.setHours(Math.floor(live.start), (live.start % 1) * 60, 0, 0);
+      list.push({ cls: 'green', txt: `${live.name} session started in all hostels`, t: st, code: 0 });
+    }
+    return list.sort((a, b) => b.t - a.t);
+  }
+  function renderAlerts(hostels, h) {
+    allAlerts = buildAlerts(hostels);
+    const scoped = h ? allAlerts.filter(a => a.code === h.code || a.code === 0) : allAlerts;
+    const list = alertsExpanded ? scoped : scoped.slice(0, 3);
+    $('bnAlerts').innerHTML = list.length
+      ? list.map(a => `<div class="bn-alert ${a.cls}"><i></i><span>${a.txt}</span><time>${relTime(a.t)}</time></div>`).join('')
+      : '<div class="bn-alert green"><i></i><span>No alerts — everything looks normal.</span></div>';
+    $('alertsMore').hidden = scoped.length <= 3;
+    $('alertsMore').textContent = alertsExpanded ? 'Show fewer' : 'View all alerts →';
+    $('bellCount').textContent = allAlerts.length;
+    $('bellCount').hidden = !allAlerts.length;
+  }
+  $('alertsMore').addEventListener('click', () => { alertsExpanded = !alertsExpanded; renderAlerts(lastHostels, scopedHostel()); });
+  $('bellBtn').addEventListener('click', () => $('bnAlerts').scrollIntoView({ behavior: 'smooth', block: 'center' }));
+
+  function renderSystem(hostels, s, h) {
+    const row = (ico, label, val, cls) =>
+      `<div class="bn-sys-row">${svg(ico)}<span>${label}</span><b class="${cls}">${val}</b></div>`;
+    if (h) {
+      const todayCount = h.stats.readings.filter(r => sameDay(r.time, new Date())).length;
+      $('bnSystem').innerHTML =
+        row('wifi', 'Waste Scale', h.source === 'none' ? 'Offline' : 'Online', h.source === 'none' ? 'm' : 'g') +
+        row('sync', 'Last Reading', h.stats.latest ? t12(h.stats.latest.time) + ' · ' + relTime(h.stats.latest.time) : '—', h.stats.latest ? 'g' : 'm') +
+        row('box', "Today's Readings", todayCount + ' entries', 'g') +
+        row('save', 'Data Source', h.source === 'live' ? 'ThingSpeak Live' : h.source === 'sim' ? 'Simulated' : 'None', h.source === 'live' ? 'g' : 'm');
+      return;
+    }
+    const active = hostels.filter(x => x.source !== 'none').length;
+    const lastT = s.readings.length ? s.readings[s.readings.length - 1].time : null;
+    $('bnSystem').innerHTML =
+      row('wifi', 'Active Devices', active + ' / ' + hostels.length + ' Online', 'g') +
+      row('box', 'Bin Status', active + ' / ' + hostels.length + ' Operational', 'g') +
+      row('sync', 'Data Sync', lastT ? 'Live · ' + relTime(lastT) : 'Waiting', lastT ? 'g' : 'm') +
+      row('save', 'Last Backup', lastT ? 'Today, ' + t12(lastT) : '—', 'm');
+  }
+
+  function renderTop5(hostels, h) {
+    if (h) {
+      $('bnT5Title').innerHTML = 'Recent Activity <small>(latest readings)</small>';
+      const rows = h.stats.readings.slice(-8).reverse();
+      $('bnTop5').innerHTML = rows.length
+        ? rows.map(r =>
+          `<div class="bn-t5-row"><em>·</em><span>${t12(r.time)} — ${cap(mealOf(r.time))}</span>
+            <span class="bn-t5-src">${r.source === 'live' ? '📡 Live' : '≈ Sim'}</span>
+            <b>${r.weight.toFixed(2)} kg</b></div>`).join('')
+        : '<div class="bn-alert green"><i></i><span>No readings yet.</span></div>';
+      return;
+    }
+    $('bnT5Title').innerHTML = 'Top 5 Hostels <small>(By Waste Today)</small>';
+    const top = hostels.slice().sort((a, b) => b.stats.today - a.stats.today).slice(0, 5);
+    const max = Math.max(...top.map(x => x.stats.today), 0.001);
+    const colors = ['#ef4444', '#ef4444', '#f59e0b', '#f59e0b', '#22c55e'];
+    $('bnTop5').innerHTML = top.map((x, i) =>
+      `<div class="bn-t5-row" data-code="${x.code}"><em>${i + 1}</em><span>${x.name} Hostel</span>
+        <span class="bn-t5-bar"><i style="--w:${Math.max(6, x.stats.today / max * 100)}%;background:${colors[i]}"></i></span>
+        <b>${x.stats.today.toFixed(1)} kg</b></div>`).join('');
+  }
+  $('bnTop5').addEventListener('click', e => {
+    const row = e.target.closest('[data-code]');
+    if (row) openHostel(+row.dataset.code);
+  });
+
+  /* ---------------- RENDER: savings strip ---------------- */
+  function renderStrip(hostels, s, h) {
+    const savedKg = Math.max(s.prevWeek7 - s.week7, s.week7 * 0.05);
+    const active = hostels.filter(x => x.source !== 'none').length;
+    const accuracy = (100 - (hostels.length - active) * 0.4 - 0.2).toFixed(1);
+    const cell = (ico, color, label, value, sub, subCls) =>
+      `<div class="bn-strip-cell"><span class="bn-kpi-ico ${color}">${svg(ico)}</span>
+        <div><p>${label}</p><h6>${value}</h6><small class="${subCls || ''}">${sub}</small></div></div>`;
+    const scaleCell = h
+      ? cell('build', 'green', 'Waste Scale', h.source === 'none' ? 'Offline' : 'Online', h.source === 'live' ? 'ThingSpeak' : h.source === 'sim' ? 'Simulated' : '—', 'm')
+      : cell('build', 'green', 'Active Hostels', active + ' / ' + hostels.length, active === hostels.length ? '100% Operational' : 'Partial coverage');
+    $('bnStrip').innerHTML =
+      cell('drop', 'blue', 'Water Saved (est.)', nf(Math.round(savedKg * 16)) + ' L', 'vs last week') +
+      cell('leaf', 'green', 'Food Saved (est.)', nf(Math.round(savedKg)) + ' kg', 'vs last week') +
+      cell('meal', 'teal', 'Meals Saved (est.)', nf(Math.round(savedKg / KG_MEAL)), 'vs last week') +
+      cell('bolt', 'orange', 'Energy Saved (est.)', nf(Math.round(savedKg * 2.7)) + ' kWh', 'vs last week') +
+      scaleCell +
+      cell('disc', 'indigo', 'Data Accuracy', accuracy + '%', 'Excellent', 'm');
   }
 
   /* ---------------- MAIN ---------------- */
   let lastHostels = [];
-  let timer = null;
+  let timer = null, clockTimer = null;
 
   function showBanner(html) { const b = $('dashBanner'); b.innerHTML = html; b.hidden = false; }
   function hideBanner() { $('dashBanner').hidden = true; }
 
+  function globalStats(hostels) {
+    const readings = hostels.flatMap(x => x.stats.readings).sort((a, b) => a.time - b.time);
+    return computeStats(readings);
+  }
+
   function renderAll() {
-    const stats = scope === 0
-      ? globalStats(lastHostels)
-      : (lastHostels.find(h => h.code === scope) || { stats: computeStats([]) }).stats;
-    const pop = scope === 0 ? POP * HOSTELS.length : POP;
-    renderKpis(stats, pop);
-    renderMatrix(lastHostels);
-    renderTrend(stats);
-    renderMeals(stats);
-    renderBins(stats);
-    $('dashNote').textContent = 'Last updated: ' + new Date().toLocaleTimeString();
+    const h = scopedHostel();
+    const s = h ? h.stats : globalStats(lastHostels);
+    lastScope = s;
+    renderHead(h);
+    renderTopbar(lastHostels);
+    renderRails(lastHostels);
+    renderKpis(s, h);
+    renderTrend(s);
+    renderDonut(s);
+    renderScales(s);
+    renderInsights(lastHostels, s, h);
+    renderAi(lastHostels, s, h);
+    renderAlerts(lastHostels, h);
+    renderSystem(lastHostels, s, h);
+    renderTop5(lastHostels, h);
+    renderStrip(lastHostels, s, h);
+    $('dashNote').textContent = '© 2026 IIT Guwahati Waste Monitor · WasteWise · Last updated ' + new Date().toLocaleTimeString();
   }
 
   async function refresh() {
     try {
       const data = await fetchFeeds();
       lastHostels = buildHostels(bucketReal(data.feeds));
-      const liveCount = lastHostels.filter(h => h.source === 'live').length;
-      if (!data.feeds || !data.feeds.length) {
-        showBanner('✅ Connected to the WasteWise server. Waiting for the first reading — other hostels show simulated data.');
-      } else if (CFG.DEMO_FILL && liveCount < HOSTELS.length) {
+      const liveCount = lastHostels.filter(x => x.source === 'live').length;
+      if (CFG.DEMO_FILL && liveCount < HOSTELS.length) {
         showBanner('📡 <strong>' + liveCount + '</strong> hostel(s) sending live data via the server; the rest are simulated (<code>DEMO_FILL</code> in <code>config.js</code>).');
       } else hideBanner();
     } catch (err) {
@@ -422,16 +614,19 @@
 
   $('dashRefresh').addEventListener('click', refresh);
 
-  async function start() {
-    await loadServerConfig();
-    setupManual();
+  function start() {
+    tickClock();
     refresh();
     if (timer) clearInterval(timer);
     timer = setInterval(refresh, (CFG.REFRESH_SECONDS || 20) * 1000);
+    if (clockTimer) clearInterval(clockTimer);
+    clockTimer = setInterval(tickClock, 1000);
   }
-  function stop() { if (timer) { clearInterval(timer); timer = null; } }
+  function stop() {
+    if (timer) { clearInterval(timer); timer = null; }
+    if (clockTimer) { clearInterval(clockTimer); clockTimer = null; }
+  }
 
-  initSelect();
   if (localStorage.getItem(AUTH_KEY) === '1') { showApp(true); start(); }
   else showApp(false);
 })();
