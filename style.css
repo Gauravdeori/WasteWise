@@ -1862,3 +1862,6 @@ section.page-section.active:not(.hero) {
 .hamburger { z-index: 110; position: relative; }
 .nav-links { z-index: 100; }
 
+
+.navbar.menu-open { backdrop-filter: none !important; background: transparent !important; box-shadow: none !important; }
+
