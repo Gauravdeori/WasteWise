@@ -336,8 +336,30 @@
     $('bnTrendAxis').innerHTML =
       `<span>${fmt(days[0].date)}</span><span>${fmt(days[Math.floor(days.length / 2)].date)}</span><span>${fmt(days[days.length - 1].date)}</span>`;
     $('trendDaysLbl').textContent = '(' + trendDays + ' Days)';
+    trendGeom = { days, L, W, R: 8 };
   }
   $('trendRange').addEventListener('change', e => { trendDays = +e.target.value; if (lastScope) renderTrend(lastScope); });
+
+  // hover tooltip on the trend chart
+  let trendGeom = null;
+  (function initTrendHover() {
+    const svgEl = $('bnTrend'), tip = $('trendTip');
+    svgEl.addEventListener('mousemove', e => {
+      if (!trendGeom) return;
+      const rect = svgEl.getBoundingClientRect();
+      const { days, L, W, R } = trendGeom;
+      const relX = (e.clientX - rect.left) / rect.width * W;
+      const idx = Math.round((relX - L) / (W - L - R) * (days.length - 1));
+      if (idx < 0 || idx >= days.length) { tip.hidden = true; return; }
+      const d = days[idx];
+      tip.textContent = d.date.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' }) + ' · ' + d.kg.toFixed(1) + ' kg';
+      const card = svgEl.parentElement.getBoundingClientRect();
+      tip.style.left = Math.min(card.width - 130, Math.max(6, e.clientX - card.left + 12)) + 'px';
+      tip.style.top = (e.clientY - card.top - 30) + 'px';
+      tip.hidden = false;
+    });
+    svgEl.addEventListener('mouseleave', () => { tip.hidden = true; });
+  })();
 
   /* ---------------- RENDER: donut + scales ---------------- */
   const MEAL_COLORS = { breakfast: '#22c55e', lunch: '#6366f1', dinner: '#f59e0b', snacks: '#eab308' };
@@ -494,9 +516,19 @@
     $('alertsMore').textContent = alertsExpanded ? 'Show fewer' : 'View all alerts →';
     $('bellCount').textContent = allAlerts.length;
     $('bellCount').hidden = !allAlerts.length;
+    // bell dropdown always shows campus-wide alerts
+    $('bellList').innerHTML = allAlerts.length
+      ? allAlerts.map(a => `<div class="bn-alert ${a.cls}"><i></i><span>${a.txt}</span><time>${relTime(a.t)}</time></div>`).join('')
+      : '<div class="bn-alert green"><i></i><span>No notifications.</span></div>';
   }
   $('alertsMore').addEventListener('click', () => { alertsExpanded = !alertsExpanded; renderAlerts(lastHostels, scopedHostel()); });
-  $('bellBtn').addEventListener('click', () => $('bnAlerts').scrollIntoView({ behavior: 'smooth', block: 'center' }));
+  $('bellBtn').addEventListener('click', e => {
+    e.stopPropagation();
+    $('bellDrop').hidden = !$('bellDrop').hidden;
+  });
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.bn-bell-wrap')) $('bellDrop').hidden = true;
+  });
 
   function renderSystem(hostels, s, h) {
     const row = (ico, label, val, cls) =>
@@ -544,6 +576,82 @@
     const row = e.target.closest('[data-code]');
     if (row) openHostel(+row.dataset.code);
   });
+
+  /* ---------------- EXPORT CSV (scope-aware) ---------------- */
+  $('exportBtn').addEventListener('click', () => {
+    if (!lastHostels.length) return;
+    const h = scopedHostel();
+    let csv, name;
+    if (h) {
+      csv = 'Time,Meal,Weight (kg),Source\n' +
+        h.stats.readings.map(r => `${r.time.toISOString()},${mealOf(r.time)},${r.weight},${r.source}`).join('\n');
+      name = 'wastewise-' + h.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-readings.csv';
+    } else {
+      csv = 'Hostel,Code,Status,Today (kg),7-day (kg),Efficiency (%),Source\n' +
+        lastHostels.map(x =>
+          `${x.name},${x.code},${x.status},${x.stats.today.toFixed(2)},${x.stats.week7.toFixed(2)},${x.stats.eff},${x.source}`).join('\n');
+      name = 'wastewise-hostel-summary.csv';
+    }
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+    a.download = name;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    showToast('⤓ Exported ' + name);
+  });
+
+  /* ---------------- LOG READING (backend write) ---------------- */
+  let serverConfig = { writeEnabled: false };
+  async function loadServerConfig() {
+    try {
+      const r = await fetch(API + '/api/config', { cache: 'no-store' });
+      if (r.ok) serverConfig = await r.json();
+    } catch (e) { /* backend down — button stays hidden */ }
+    $('addReadingBtn').hidden = !serverConfig.writeEnabled;
+  }
+  $('addReadingBtn').addEventListener('click', () => {
+    $('logHostel').innerHTML = HOSTELS.map((n, i) =>
+      `<option value="${i + 1}"${scope === i + 1 ? ' selected' : ''}>${n}</option>`).join('');
+    $('logMsg').textContent = '';
+    $('logModal').hidden = false;
+    $('logWeight').focus();
+  });
+  $('logCancel').addEventListener('click', () => { $('logModal').hidden = true; });
+  $('logModal').addEventListener('click', e => { if (e.target === $('logModal')) $('logModal').hidden = true; });
+  $('logForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const w = parseFloat($('logWeight').value);
+    if (isNaN(w) || w <= 0) return;
+    $('logMsg').textContent = 'Sending…';
+    try {
+      const r = await fetch(API + '/api/reading', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ weight: w, hostel: $('logHostel').value })
+      });
+      const j = await r.json().catch(() => ({}));
+      if (r.ok && j.entry_id > 0) {
+        $('logMsg').textContent = '✓ Sent (entry #' + j.entry_id + ')';
+        showToast('✓ Reading logged: ' + w.toFixed(2) + ' kg');
+        $('logForm').reset();
+        setTimeout(() => { $('logModal').hidden = true; refresh(); }, 1200);
+      } else if (r.ok && j.entry_id === 0) {
+        $('logMsg').textContent = '⚠ Rate limited — wait 15s and try again';
+      } else {
+        $('logMsg').textContent = '✗ ' + (j.error || 'failed');
+      }
+    } catch (err) { $('logMsg').textContent = '✗ ' + err.message; }
+  });
+
+  /* ---------------- TOASTS ---------------- */
+  function showToast(txt) {
+    const t = document.createElement('div');
+    t.className = 'bn-toast';
+    t.textContent = txt;
+    $('bnToasts').appendChild(t);
+    requestAnimationFrame(() => t.classList.add('show'));
+    setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 350); }, 4000);
+  }
 
   /* ---------------- RENDER: savings strip ---------------- */
   function renderStrip(hostels, s, h) {
@@ -597,11 +705,17 @@
     $('dashNote').textContent = '© 2026 IIT Guwahati Waste Monitor · WasteWise · Last updated ' + new Date().toLocaleTimeString();
   }
 
+  let lastLiveCount = -1;
   async function refresh() {
+    $('dashRefresh').classList.add('spin');
     try {
       const data = await fetchFeeds();
       lastHostels = buildHostels(bucketReal(data.feeds));
       const liveCount = lastHostels.filter(x => x.source === 'live').length;
+      // toast when a new live reading arrives between refreshes
+      const liveReadings = lastHostels.reduce((n, x) => n + (x.source === 'live' ? x.stats.readings.length : 0), 0);
+      if (lastLiveCount >= 0 && liveReadings > lastLiveCount) showToast('📡 New reading received from a Waste Scale');
+      lastLiveCount = liveReadings;
       if (CFG.DEMO_FILL && liveCount < HOSTELS.length) {
         showBanner('📡 <strong>' + liveCount + '</strong> hostel(s) sending live data via the server; the rest are simulated (<code>DEMO_FILL</code> in <code>config.js</code>).');
       } else hideBanner();
@@ -609,6 +723,7 @@
       showBanner('❌ Could not reach the WasteWise server (<strong>' + err.message + '</strong>) — showing simulated data. Start it with <code>npm start</code>.');
       lastHostels = buildHostels({});
     }
+    $('dashRefresh').classList.remove('spin');
     renderAll();
   }
 
@@ -616,6 +731,7 @@
 
   function start() {
     tickClock();
+    loadServerConfig();
     refresh();
     if (timer) clearInterval(timer);
     timer = setInterval(refresh, (CFG.REFRESH_SECONDS || 20) * 1000);

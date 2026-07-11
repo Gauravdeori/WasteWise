@@ -480,9 +480,21 @@
             </div>
           </div>
           <div class="bn-top-actions">
-            <button class="bn-iconbtn" id="bellBtn" title="Alerts">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6.5 2 6.5H4S6 14 6 9z"/><path d="M10 20a2.2 2.2 0 0 0 4 0"/></svg>
-              <span class="bn-badge" id="bellCount" hidden>0</span>
+            <div class="bn-bell-wrap">
+              <button class="bn-iconbtn" id="bellBtn" title="Alerts">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6.5 2 6.5H4S6 14 6 9z"/><path d="M10 20a2.2 2.2 0 0 0 4 0"/></svg>
+                <span class="bn-badge" id="bellCount" hidden>0</span>
+              </button>
+              <div class="bn-bell-drop" id="bellDrop" hidden>
+                <h5>Notifications</h5>
+                <div class="bn-bell-list" id="bellList"></div>
+              </div>
+            </div>
+            <button class="bn-iconbtn" id="exportBtn" title="Export CSV">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7.5 10.5 12 15l4.5-4.5"/><path d="M4 19h16"/></svg>
+            </button>
+            <button class="bn-iconbtn" id="addReadingBtn" title="Log a reading" hidden>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
             </button>
             <button class="bn-iconbtn" id="dashRefresh" title="Refresh now">⟳</button>
             <button class="bn-iconbtn danger" id="dashLogout" title="Sign out">⎋</button>
@@ -519,6 +531,7 @@
                   </select>
                 </div>
                 <svg id="bnTrend" viewBox="0 0 460 190" preserveAspectRatio="none" aria-label="Waste trend"></svg>
+                <div class="bn-tooltip" id="trendTip" hidden></div>
                 <div class="bn-axis" id="bnTrendAxis"></div>
               </section>
 
@@ -572,6 +585,30 @@
 
           <aside class="bn-rail" id="railRight"></aside>
         </div>
+
+        <!-- Log Reading modal (shown only when the server has a write key) -->
+        <div class="bn-modal" id="logModal" hidden>
+          <div class="bn-modal-card">
+            <h4>Log a Reading</h4>
+            <p>Sends a test reading to ThingSpeak via the WasteWise server.</p>
+            <form id="logForm">
+              <label>Hostel
+                <select id="logHostel" class="bn-mini-select"></select>
+              </label>
+              <label>Weight (kg)
+                <input type="number" step="0.01" min="0.01" id="logWeight" placeholder="e.g. 2.4" required />
+              </label>
+              <div class="bn-modal-actions">
+                <button type="button" class="bn-back" id="logCancel">Cancel</button>
+                <button type="submit" class="btn btn-primary">Send Reading</button>
+              </div>
+              <p class="bn-modal-msg" id="logMsg"></p>
+            </form>
+          </div>
+        </div>
+
+        <!-- Toasts -->
+        <div class="bn-toasts" id="bnToasts"></div>
       </div>
     </div>
   </section>
