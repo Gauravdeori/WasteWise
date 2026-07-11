@@ -1837,3 +1837,19 @@ section.page-section.active:not(.hero) {
   .quote-block { padding: 32px 24px; }
   .quote-block p { font-size: 1.05rem; }
 }
+
+
+/* ---- EXTRA MOBILE OPTIMIZATIONS ---- */
+@media (max-width: 480px) {
+  .hero h1 { font-size: 2.2rem; }
+  .hero-sub { font-size: 1rem; }
+  .hero-btns { flex-direction: column; width: 100%; }
+  .hero-btns .btn { width: 100%; justify-content: center; }
+  .dash-card { padding: 16px; }
+  .dash-card h3 { font-size: 1.4rem; }
+  .problem-card { padding: 24px; }
+  .c-item { padding: 18px; flex-direction: column; text-align: center; align-items: center; }
+  .contact-form { padding: 24px; }
+  .f-brand p { text-align: center; margin: 16px auto; }
+  .f-brand { display: flex; flex-direction: column; align-items: center; }
+}
