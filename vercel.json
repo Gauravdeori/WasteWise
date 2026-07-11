@@ -1,9 +1,14 @@
 {
   "version": 2,
+  "functions": {
+    "server.js": {
+      "includeFiles": "**/*.{html,css,js,png,jpg,svg}"
+    }
+  },
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/index.js"
+      "source": "/(.*)",
+      "destination": "/server.js"
     }
   ]
 }
