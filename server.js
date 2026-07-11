@@ -65,4 +65,10 @@ app.post('/api/reading', async (req, res) => {
 // Static site — deny dotfiles so .env / .git are never served
 app.use(express.static(__dirname, { dotfiles: 'deny', extensions: ['html'] }));
 
-app.listen(PORT, () => console.log(`WasteWise running on http://localhost:${PORT}`));
+// Export the app for Vercel
+module.exports = app;
+
+// Only listen if called directly (e.g. `node server.js`)
+if (require.main === module) {
+  app.listen(PORT, () => console.log(`WasteWise running on http://localhost:${PORT}`));
+}
