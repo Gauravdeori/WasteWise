@@ -1872,7 +1872,7 @@ section.page-section.active:not(.hero) {
 /* Mobile Hero Image Update */
 @media (max-width: 680px) {
   .hero {
-    background: linear-gradient(to right, rgba(12, 36, 24, 0.85), rgba(12, 36, 24, 0.45)), url('assets/hero-mobile.jpg') center/cover no-repeat !important;
+    background: linear-gradient(to right, rgba(12, 36, 24, 0.85), rgba(12, 36, 24, 0.45)), url('assets/hero-mobile.png') center/cover no-repeat !important;
   }
 }
 
