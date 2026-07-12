@@ -2183,6 +2183,7 @@ section.page-section.active:not(.hero) {
 .bnh-status.warn { color: var(--bn-orange); }
 .bnh-status.high { color: var(--bn-red); }
 .bnh-status.off { color: var(--bn-faint); }
+.bnh-status.sim { color: var(--bn-blue); }
 .bnh-mid {
   display: flex;
   justify-content: space-between;

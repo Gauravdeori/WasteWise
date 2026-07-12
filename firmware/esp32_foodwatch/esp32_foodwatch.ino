@@ -109,6 +109,7 @@ bool sendToThingSpeak(float kg, int station) {
   url += TS_WRITE_API_KEY;
   url += "&field1=" + String(kg, 3);
   url += "&field2=" + String(station);
+  url += "&field3=" + String(WiFi.RSSI());   // WiFi signal (dBm) -> device health on the dashboard
 
   http.begin(url);
   int code = http.GET();

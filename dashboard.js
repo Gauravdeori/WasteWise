@@ -137,7 +137,14 @@
       if (source === 'none') status = 'off';
       else if (stats.today > Math.max(stats.avg7, 0.1) * 1.3) status = 'high';
       else if (stats.eff < 75) status = 'warn';
-      return { code, name, source, stats, status };
+      // latest reported WiFi signal from the ESP32 (live devices only)
+      let rssi = null;
+      if (source === 'live') {
+        for (let r = real.length - 1; r >= 0; r--) {
+          if (real[r].rssi != null) { rssi = real[r].rssi; break; }
+        }
+      }
+      return { code, name, source, stats, status, rssi };
     });
   }
 
@@ -150,15 +157,32 @@
   function bucketReal(feeds) {
     const wField = CFG.FIELD_WEIGHT || 'field1';
     const sField = CFG.FIELD_STATION || 'field2';
+    const rField = CFG.FIELD_RSSI || 'field3';
+    const minKg = CFG.MIN_VALID_KG ?? 0.02;
+    const maxKg = CFG.MAX_VALID_KG ?? 60;
     const map = {};
     (feeds || []).forEach(f => {
       const w = parseFloat(f[wField]); if (isNaN(w)) return;
+      if (w < minKg || w > maxKg) return;                 // HX711 glitch / miscalibration guard
       const t = new Date(f.created_at); if (isNaN(t.getTime())) return;
       let code = parseInt(f[sField], 10);
       if (isNaN(code) || code < 1 || code > HOSTELS.length) code = 1;
-      (map[code] = map[code] || []).push({ weight: w, time: t, source: 'live' });
+      const rssi = parseInt(f[rField], 10);
+      (map[code] = map[code] || []).push({
+        weight: w, time: t, source: 'live',
+        rssi: (isNaN(rssi) || rssi >= 0 || rssi < -120) ? null : rssi
+      });
     });
     return map;
+  }
+
+  // signal quality label from dBm
+  function rssiLabel(rssi) {
+    if (rssi == null) return null;
+    if (rssi >= -55) return { txt: 'Excellent', bars: '▂▄▆█', cls: 'g' };
+    if (rssi >= -67) return { txt: 'Good', bars: '▂▄▆', cls: 'g' };
+    if (rssi >= -78) return { txt: 'Fair', bars: '▂▄', cls: 'm' };
+    return { txt: 'Weak', bars: '▂', cls: 'm' };
   }
 
   /* ---------------- SVG helpers ---------------- */
@@ -241,8 +265,12 @@
       $('sessRange').textContent = 'Next: ' + nm.name + ' at ' + nm.startTxt;
       $('sessDot').classList.add('idle');
     }
-    const active = hostels.filter(h => h.source !== 'none').length;
-    $('devCount').textContent = active + ' / ' + hostels.length + ' Online';
+    const real = hostels.filter(h => h.source === 'live').length;
+    const sim = hostels.filter(h => h.source === 'sim').length;
+    const active = real + sim;
+    $('devCount').textContent = real
+      ? active + ' / ' + hostels.length + ' · ' + real + ' ESP32'
+      : active + ' / ' + hostels.length + ' Online';
     $('sysState').textContent = active === hostels.length ? 'Operational' : (hostels.length - active) + ' hostel(s) offline';
   }
   function tickClock() {
@@ -259,11 +287,15 @@
     const card = h => {
       const cls = (h.status === 'high' ? 'high' : h.status === 'warn' ? 'warn' : h.status === 'off' ? 'off' : '') +
                   (scope === h.code ? ' active' : '');
-      const stTxt = h.status === 'high' ? 'High' : h.status === 'off' ? 'Offline' : 'Live';
-      const stCls = h.status === 'high' ? 'high' : h.status === 'warn' ? 'warn' : h.status === 'off' ? 'off' : 'live';
+      const stTxt = h.status === 'high' ? '● High'
+        : h.status === 'off' ? '● Offline'
+        : h.source === 'live' ? '📡 Live'
+        : '● Sim';
+      const stCls = h.status === 'high' ? 'high' : h.status === 'warn' ? 'warn' : h.status === 'off' ? 'off'
+        : h.source === 'sim' ? 'sim' : 'live';
       const week = h.stats.days30.slice(23).map(d => d.kg);
       return `<div class="bn-hostel ${cls}" data-code="${h.code}" title="Open ${h.name} Hostel dashboard">
-        <div class="bnh-top"><span class="bnh-num">${pad(h.code)}</span><b>${h.name} Hostel</b><span class="bnh-status ${stCls}">● ${stTxt}</span></div>
+        <div class="bnh-top"><span class="bnh-num">${pad(h.code)}</span><b>${h.name} Hostel</b><span class="bnh-status ${stCls}">${stTxt}</span></div>
         <div class="bnh-mid"><span>${sessTxt}</span><span>${sessTime}</span></div>
         <div class="bnh-bottom">
           <div class="bnh-kg"><h5>${h.stats.today.toFixed(1)} kg</h5><p>Today</p></div>
@@ -535,20 +567,38 @@
       `<div class="bn-sys-row">${svg(ico)}<span>${label}</span><b class="${cls}">${val}</b></div>`;
     if (h) {
       const todayCount = h.stats.readings.filter(r => sameDay(r.time, new Date())).length;
+      const sig = rssiLabel(h.rssi);
       $('bnSystem').innerHTML =
-        row('wifi', 'Waste Scale', h.source === 'none' ? 'Offline' : 'Online', h.source === 'none' ? 'm' : 'g') +
+        row('wifi', 'ESP32 Scale', h.source === 'none' ? 'Offline' : h.stats.online ? 'Online' : 'Idle', h.source === 'none' ? 'm' : 'g') +
+        (h.source === 'live'
+          ? row('wifi', 'WiFi Signal', sig ? `${sig.bars} ${h.rssi} dBm · ${sig.txt}` : 'not reported', sig ? sig.cls : 'm')
+          : '') +
         row('sync', 'Last Reading', h.stats.latest ? t12(h.stats.latest.time) + ' · ' + relTime(h.stats.latest.time) : '—', h.stats.latest ? 'g' : 'm') +
         row('box', "Today's Readings", todayCount + ' entries', 'g') +
-        row('save', 'Data Source', h.source === 'live' ? 'ThingSpeak Live' : h.source === 'sim' ? 'Simulated' : 'None', h.source === 'live' ? 'g' : 'm');
+        row('save', 'Data Source', h.source === 'live' ? 'ESP32 · ThingSpeak' : h.source === 'sim' ? 'Simulated' : 'None', h.source === 'live' ? 'g' : 'm');
       return;
     }
-    const active = hostels.filter(x => x.source !== 'none').length;
+    // overview: monitor real ESP32 devices first
+    const liveDevs = hostels.filter(x => x.source === 'live');
+    const sim = hostels.filter(x => x.source === 'sim').length;
     const lastT = s.readings.length ? s.readings[s.readings.length - 1].time : null;
-    $('bnSystem').innerHTML =
-      row('wifi', 'Active Devices', active + ' / ' + hostels.length + ' Online', 'g') +
-      row('box', 'Bin Status', active + ' / ' + hostels.length + ' Operational', 'g') +
+    let rows = '';
+    if (liveDevs.length) {
+      rows += liveDevs.slice(0, 3).map(d => {
+        const sig = rssiLabel(d.rssi);
+        return row('wifi', '📡 ' + d.name,
+          (d.stats.latest ? relTime(d.stats.latest.time) : '—') + (sig ? ' · ' + sig.bars + ' ' + d.rssi + ' dBm' : ''),
+          d.stats.online ? 'g' : 'm');
+      }).join('');
+      if (liveDevs.length > 3) rows += row('wifi', '+ ' + (liveDevs.length - 3) + ' more ESP32(s)', 'reporting', 'g');
+    } else {
+      rows += row('wifi', 'ESP32 Devices', 'None connected yet', 'm');
+    }
+    rows +=
+      row('box', 'Simulated Hostels', sim + ' (DEMO_FILL)', 'm') +
       row('sync', 'Data Sync', lastT ? 'Live · ' + relTime(lastT) : 'Waiting', lastT ? 'g' : 'm') +
-      row('save', 'Last Backup', lastT ? 'Today, ' + t12(lastT) : '—', 'm');
+      row('save', 'Last Entry', lastT ? 'Today, ' + t12(lastT) : '—', 'm');
+    $('bnSystem').innerHTML = rows;
   }
 
   function renderTop5(hostels, h) {

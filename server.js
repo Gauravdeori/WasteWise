@@ -50,9 +50,11 @@ app.post('/api/reading', async (req, res) => {
   if (!WRITE_KEY) return res.status(403).json({ error: 'writes disabled (no TS_WRITE_KEY)' });
   const weight = Number(req.body.weight);
   const hostel = req.body.hostel;
+  const rssi = Number(req.body.rssi);
   if (!isFinite(weight)) return res.status(400).json({ error: 'valid weight required' });
   let url = `https://api.thingspeak.com/update?api_key=${WRITE_KEY}&field1=${encodeURIComponent(weight)}`;
   if (hostel) url += `&field2=${encodeURIComponent(hostel)}`;
+  if (isFinite(rssi)) url += `&field3=${encodeURIComponent(rssi)}`;   // ESP32 WiFi signal (dBm)
   try {
     const r = await fetch(url, { signal: AbortSignal.timeout(10000) });
     const entry = Number(await r.text());   // 0 = rate-limited / failed

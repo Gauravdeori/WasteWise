@@ -16,6 +16,12 @@ window.FOODWATCH_CONFIG = {
   /* Which ThingSpeak field holds what (used to parse the server response) */
   FIELD_WEIGHT: 'field1',        // load-cell weight in kg
   FIELD_STATION: 'field2',       // hostel code (1..14)
+  FIELD_RSSI: 'field3',          // ESP32 WiFi signal in dBm (optional, sent by firmware)
+
+  /* Load-cell sanity filter — readings outside this range are ignored
+     (protects the dashboard from HX711 spikes / miscalibration) */
+  MIN_VALID_KG: 0.02,
+  MAX_VALID_KG: 60,
 
   /* Conversion factors (from the project proposal) */
   PRICE_PER_KG: 75,              // ₹ value of 1 kg of food

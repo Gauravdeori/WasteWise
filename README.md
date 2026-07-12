@@ -116,8 +116,12 @@ password: foodwatch2026
 ## 2. The ThingSpeak channel
 
 - **Channel ID:** `3425567` — *IOT TIH waste detection management system* (Private)
-- **Fields:** `field1` = weight (kg), `field2` = hostel code (1–14)
+- **Fields:** `field1` = weight (kg), `field2` = hostel code (1–14),
+  `field3` = ESP32 WiFi RSSI in dBm (optional — powers the dashboard's
+  Device Monitor / WiFi-signal display)
 - **API Keys tab** gives you the Read key (dashboard) and Write key (ESP32).
+- The dashboard ignores readings outside `0.02–60 kg` (HX711 glitch guard,
+  tunable via `MIN_VALID_KG` / `MAX_VALID_KG` in `config.js`).
 
 **Test the pipeline from a terminal** (no hardware needed) — use your own keys:
 ```bash
