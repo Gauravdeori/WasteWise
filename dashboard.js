@@ -760,6 +760,88 @@
     return computeStats(readings);
   }
 
+  /* ---------------- ADMIN ANALYTICS (admin-only panels) ---------------- */
+  function renderAdminAnalytics(hostels, s, h) {
+    if (role !== 'admin') return;
+
+    // --- Hostel Comparison Bar Chart ---
+    const sorted = hostels.slice().sort((a, b) => b.stats.today - a.stats.today);
+    const maxKg = Math.max(...sorted.map(x => x.stats.today), 0.1);
+    const barColors = kg => {
+      const pct = kg / maxKg;
+      if (pct > 0.8) return '#ef4444';
+      if (pct > 0.5) return '#f59e0b';
+      return '#059669';
+    };
+    $('bnCompare').innerHTML = sorted.map(x => {
+      const pct = Math.max(3, (x.stats.today / maxKg) * 100);
+      const color = barColors(x.stats.today);
+      return `<div class="bn-compare-row">
+        <span class="bn-cmp-name" title="${x.name}">${x.name}</span>
+        <span class="bn-cmp-bar"><i style="width:${pct.toFixed(1)}%;background:${color}"></i></span>
+        <span class="bn-cmp-val">${x.stats.today.toFixed(1)} kg</span>
+      </div>`;
+    }).join('');
+
+    // --- Cost Analysis ---
+    const todayTotal = s.today;
+    const weekTotal = s.week7;
+    const monthEst = s.avg7 * 30;
+    const prevMonthEst = (s.prevWeek7 / 7) * 30;
+    const savings = Math.max(0, prevMonthEst - monthEst);
+    const co2Month = monthEst * CO2;
+    $('bnCost').innerHTML = `
+      <div class="bn-cost-item">
+        <p>Today's Waste Cost</p>
+        <h5 class="red">₹${nf(Math.round(todayTotal * PRICE))}</h5>
+        <small>${todayTotal.toFixed(1)} kg × ₹${PRICE}/kg</small>
+      </div>
+      <div class="bn-cost-item">
+        <p>This Week</p>
+        <h5 class="orange">₹${nf(Math.round(weekTotal * PRICE))}</h5>
+        <small>${weekTotal.toFixed(1)} kg total</small>
+      </div>
+      <div class="bn-cost-item">
+        <p>Monthly Projection</p>
+        <h5>₹${nf(Math.round(monthEst * PRICE))}</h5>
+        <small>~${monthEst.toFixed(0)} kg at current rate</small>
+      </div>
+      <div class="bn-cost-item">
+        <p>Est. Monthly Savings</p>
+        <h5 class="green">₹${nf(Math.round(savings * PRICE))}</h5>
+        <small>~${co2Month.toFixed(0)} kg CO₂ impact</small>
+      </div>`;
+
+    // --- Weekly Summary Table ---
+    const statusLabel = x => {
+      const s = x.status;
+      const src = x.source;
+      if (s === 'high') return '<span class="st-status high">● High</span>';
+      if (s === 'warn') return '<span class="st-status warn">● Watch</span>';
+      if (s === 'off') return '<span class="st-status off">● Offline</span>';
+      if (src === 'sim') return '<span class="st-status sim">● Simulated</span>';
+      return '<span class="st-status live">● Live</span>';
+    };
+    $('bnSummary').innerHTML = `
+      <thead>
+        <tr>
+          <th>#</th><th>Hostel</th><th>Today (kg)</th><th>7-Day (kg)</th>
+          <th>Avg/Day</th><th>Efficiency</th><th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${hostels.map(x => `<tr>
+          <td>${pad(x.code)}</td>
+          <td><b>${x.name}</b></td>
+          <td>${x.stats.today.toFixed(1)}</td>
+          <td>${x.stats.week7.toFixed(1)}</td>
+          <td>${x.stats.avg7.toFixed(1)}</td>
+          <td><b>${x.stats.eff}%</b></td>
+          <td>${statusLabel(x)}</td>
+        </tr>`).join('')}
+      </tbody>`;
+  }
+
   function renderAll() {
     const h = scopedHostel();
     const s = h ? h.stats : globalStats(lastHostels);
@@ -772,6 +854,7 @@
     renderDonut(s);
     renderScales(s);
     renderInsights(lastHostels, s, h);
+    renderAdminAnalytics(lastHostels, s, h);
     renderAi(lastHostels, s, h);
     renderAlerts(lastHostels, h);
     renderSystem(lastHostels, s, h);

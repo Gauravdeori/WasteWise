@@ -2436,6 +2436,7 @@ section.page-section.active:not(.hero) {
   .bn-grid { grid-template-columns: 240px 1fr; }
   .bn-insights { grid-template-columns: repeat(3, 1fr); }
   .bn-low { grid-template-columns: 1fr 1fr; }
+  .bn-admin-analytics { grid-template-columns: 1fr; }
 }
 @media (max-width: 1080px) {
   .bn-grid { grid-template-columns: 1fr; }
@@ -2448,5 +2449,182 @@ section.page-section.active:not(.hero) {
   .bn-strip { grid-template-columns: 1fr 1fr; }
   .bn-top-cells { display: none; }
   .bn-topbar { justify-content: space-between; }
+  .bn-summary-table { font-size: .75rem; }
+  .bn-summary-table th, .bn-summary-table td { padding: 8px 6px; }
 }
 
+/* ================================================================
+   ROLE-BASED VISIBILITY & STYLING
+   ================================================================ */
+
+/* Hide admin-only elements when logged in as viewer */
+.role-user .admin-only { display: none !important; }
+
+/* Role chip styling */
+.bn-role-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+}
+.bn-role-chip.admin {
+  background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+  color: #065f46;
+  border: 1px solid #6ee7b7;
+  box-shadow: 0 2px 8px rgba(5, 150, 105, 0.15);
+}
+.bn-role-chip.user {
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}
+
+/* Admin accent — subtle green top border on the dashboard app */
+.role-admin .bn-topbar {
+  border-top: 3px solid var(--bn-green);
+}
+
+/* Admin-only cards get a subtle left accent */
+.role-admin .admin-only.bn-card {
+  border-left: 3px solid var(--bn-green);
+}
+
+/* ================================================================
+   ADMIN ANALYTICS PANEL
+   ================================================================ */
+.bn-admin-analytics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 0;
+}
+
+/* Hostel comparison chart */
+.bn-compare-chart { display: flex; flex-direction: column; gap: 8px; }
+.bn-compare-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: .82rem;
+}
+.bn-compare-row .bn-cmp-name {
+  width: 110px;
+  flex-shrink: 0;
+  color: var(--bn-ink);
+  font-weight: 600;
+  font-size: .78rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bn-compare-row .bn-cmp-bar {
+  flex: 1;
+  height: 22px;
+  background: var(--bn-bg);
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+}
+.bn-compare-row .bn-cmp-bar i {
+  display: block;
+  height: 100%;
+  border-radius: 6px;
+  transition: width .6s ease;
+  min-width: 4px;
+}
+.bn-compare-row .bn-cmp-val {
+  width: 60px;
+  text-align: right;
+  font-weight: 700;
+  font-size: .8rem;
+  color: var(--bn-ink);
+  flex-shrink: 0;
+}
+
+/* Weekly summary table */
+.bn-summary-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: .82rem;
+}
+.bn-summary-table thead th {
+  background: var(--bn-bg);
+  color: var(--bn-muted);
+  font-weight: 600;
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 2px solid var(--bn-border);
+  position: sticky;
+  top: 0;
+}
+.bn-summary-table thead th:first-child { border-radius: 8px 0 0 0; }
+.bn-summary-table thead th:last-child { border-radius: 0 8px 0 0; }
+.bn-summary-table tbody td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--bn-border);
+  color: var(--bn-ink);
+}
+.bn-summary-table tbody tr:hover { background: rgba(5, 150, 105, 0.04); }
+.bn-summary-table .st-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: .7rem;
+  font-weight: 600;
+}
+.bn-summary-table .st-status.live { background: #d1fae5; color: #065f46; }
+.bn-summary-table .st-status.high { background: #fee2e2; color: #991b1b; }
+.bn-summary-table .st-status.warn { background: #fef3c7; color: #92400e; }
+.bn-summary-table .st-status.off  { background: #f1f5f9; color: #64748b; }
+.bn-summary-table .st-status.sim  { background: #e0e7ff; color: #3730a3; }
+
+.bn-summary-wrap {
+  max-height: 400px;
+  overflow-y: auto;
+}
+.bn-summary-wrap::-webkit-scrollbar { width: 5px; }
+.bn-summary-wrap::-webkit-scrollbar-thumb { background: rgba(0,0,0,.08); border-radius: 4px; }
+
+/* Cost analysis card */
+.bn-cost-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.bn-cost-item {
+  padding: 14px;
+  background: var(--bn-bg);
+  border-radius: 12px;
+  text-align: center;
+}
+.bn-cost-item p {
+  font-size: .72rem;
+  color: var(--bn-muted);
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+.bn-cost-item h5 {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--bn-ink);
+}
+.bn-cost-item h5.green { color: var(--bn-green); }
+.bn-cost-item h5.red { color: var(--bn-red); }
+.bn-cost-item h5.orange { color: var(--bn-orange); }
+.bn-cost-item small {
+  display: block;
+  font-size: .68rem;
+  color: var(--bn-muted);
+  margin-top: 2px;
+}
