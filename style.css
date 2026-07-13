@@ -1882,26 +1882,26 @@ section.page-section.active:not(.hero) {
    BENTO DASHBOARD — light neutral theme (user mockup)
    ================================================================ */
 :root {
-  --bn-bg: #f3f5f7;
+  --bn-bg: #f8fafc;
   --bn-card: #ffffff;
-  --bn-border: #e7ebee;
-  --bn-ink: #101828;
-  --bn-muted: #667085;
-  --bn-faint: #98a2b3;
-  --bn-green: #16a34a;
-  --bn-green-bg: #e9f7ee;
+  --bn-border: #e2e8f0;
+  --bn-ink: #0f172a;
+  --bn-muted: #64748b;
+  --bn-faint: #cbd5e1;
+  --bn-green: #059669;
+  --bn-green-bg: #d1fae5;
   --bn-red: #ef4444;
-  --bn-red-bg: #fdecec;
+  --bn-red-bg: #fee2e2;
   --bn-orange: #f59e0b;
-  --bn-orange-bg: #fef3e2;
+  --bn-orange-bg: #fef3c7;
   --bn-blue: #3b82f6;
-  --bn-blue-bg: #e9f0fe;
+  --bn-blue-bg: #dbeafe;
   --bn-indigo: #6366f1;
-  --bn-indigo-bg: #eceffd;
+  --bn-indigo-bg: #e0e7ff;
   --bn-teal: #0d9488;
-  --bn-teal-bg: #e2f5f3;
-  --bn-radius: 14px;
-  --bn-shadow: 0 1px 3px rgba(16, 24, 40, .06);
+  --bn-teal-bg: #ccfbf1;
+  --bn-radius: 16px;
+  --bn-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
 }
 
 .dw-section { background: var(--bn-bg); }
