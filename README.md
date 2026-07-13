@@ -15,7 +15,8 @@ ESP32 + HX711 (per hostel) ─► ThingSpeak (cloud) ─► WasteWise server (ho
 > talks to ThingSpeak. Nothing secret is shipped to the client or committed to the repo.
 
 ### Dashboard features
-- **Login gate** (demo auth) — default `admin` / `foodwatch2026` (set in `config.js`).
+- **Two roles** — `admin` (verified server-side, sees everything and can log readings)
+  and `user`/viewer (read-only, simplified dashboard). See *Login & roles* below.
 - **Facility selector** — "Global Campus View" or any single hostel; every widget rescopes.
 - **KPI cards** — waste today (kg), value lost (INR), CO2e footprint (tons) and per-capita
   waste (grams), each with a delta badge vs yesterday.
@@ -96,8 +97,8 @@ API_BASE: '',                 // '' = same origin as the backend
 FIELD_WEIGHT: 'field1',       // load-cell weight (kg)
 FIELD_STATION: 'field2',      // HOSTEL CODE (1..14)
 PRICE_PER_KG: 75, CO2_PER_KG: 2.5, REFRESH_SECONDS: 20,
-AUTH_USERNAME: 'admin', AUTH_PASSWORD: 'foodwatch2026',   // demo login
-HOSTELS: [ 'Barak', 'Brahmaputra', ... ],                 // 14 hostels; index+1 = hostel code
+ACCOUNTS: [ { username: 'user', password: 'wastewise2026', role: 'user' } ], // viewer only; admin is server-side
+HOSTELS: [ 'Brahmaputra', 'Subansiri', ... ],             // 14 hostels; index+1 = hostel code
 DEMO_FILL: true               // simulate hostels that have no real data yet
 ```
 
