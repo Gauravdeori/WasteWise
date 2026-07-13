@@ -70,14 +70,25 @@ TS_CHANNEL_ID=3425567
 TS_READ_KEY=your_read_api_key
 TS_WRITE_KEY=your_write_api_key
 PORT=3000
+
+# Admin auth — required for writes
+ADMIN_USER=admin
+ADMIN_PASS=choose_a_password
+ADMIN_TOKEN=long_random_string   # node -e "console.log(require('crypto').randomBytes(24).toString('hex'))"
 ```
 `.env` is gitignored. The browser never sees these — it only calls the backend:
 
 | Endpoint | Purpose |
 |----------|---------|
-| `GET /api/config`  | non-secret info: channel id + whether writes are enabled |
+| `GET /api/config`  | non-secret info: channel id, writes-enabled, admin-auth-enabled |
 | `GET /api/feeds`   | proxied ThingSpeak feeds (READ key used server-side) |
-| `POST /api/reading`| write a reading (WRITE key used server-side) |
+| `POST /api/login`  | validates admin credentials → returns a token |
+| `POST /api/reading`| write a reading — **requires** a valid admin token (`x-admin-token`) |
+
+**Write protection is enforced server-side.** `/api/reading` rejects any request
+without a valid admin token (HTTP 403), so viewers (and anyone hitting the API
+directly) cannot write. The token is a static secret in `.env`, handed out only
+after a correct `/api/login`.
 
 ### Frontend settings — `config.js` (no secrets)
 ```js
@@ -105,17 +116,19 @@ isn't suitable for the full app.
 The dashboard opens on a **sign-in screen**. There are two demo accounts (in
 `config.ACCOUNTS`), and the matched account's **role** decides how much is shown:
 
-| Role | Username | Password | Sees |
-|------|----------|----------|------|
-| **Admin** | `admin` | `foodwatch2026` | Everything: device monitor, WiFi signal, alerts, AI recommendation, CSV export, and the "Log Reading" control |
-| **Viewer** | `user` | `wastewise2026` | A simplified, view-only dashboard — KPIs, waste trend, waste-by-meal, insights, hostel rails and top-5 (no device/alert/admin controls) |
+| Role | Login | Verified | Sees |
+|------|-------|----------|------|
+| **Admin** | `admin` / (your `ADMIN_PASS`) | **server-side** (`/api/login`) | Everything: device monitor, WiFi signal, alerts, AI recommendation, CSV export, and the token-protected "Log Reading" control |
+| **Viewer** | `user` / `wastewise2026` | client-side (read-only) | A simplified, view-only dashboard — KPIs, waste trend, waste-by-meal, insights, hostel rails and top-5 |
 
-Add or edit accounts in `config.js` → `ACCOUNTS`. Admin-only widgets are marked with the
-`admin-only` class and hidden via `.role-user .admin-only { display: none }`.
+- **Admin** credentials live only in the server `.env` (`ADMIN_USER`/`ADMIN_PASS`), never in
+  `config.js`. On login the client calls `/api/login`; a valid response returns the admin
+  token, which the dashboard then sends with every write. Writes are enforced server-side.
+- **Viewer** accounts are in `config.js` → `ACCOUNTS` (read-only, so low risk).
+- Admin-only widgets carry the `admin-only` class, hidden via `.role-user .admin-only`.
 
-> This is **demo-level** auth (checked in the browser, role stored in `localStorage`) —
-> fine for a project/demo, but not real access control. Anyone can still reach the API
-> directly, so for production enforce roles server-side with real sessions.
+> The viewer UI is browser-side, but **the write API is not** — `/api/reading` requires the
+> admin token, so a viewer cannot log data even by calling the API directly.
 
 ---
 

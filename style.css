@@ -2190,6 +2190,17 @@ section.page-section.active:not(.hero) {
 @media (max-width: 1360px) {
   .role-user .bn-mid { grid-template-columns: 1fr; }
 }
+
+/* ---- smooth scope switch (overview <-> hostel) ---- */
+@keyframes bnFadeIn {
+  from { opacity: .3; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+.bn-center.bn-switching { animation: bnFadeIn .3s ease; }
+
+/* gentle lift on the stat cards for a more polished feel */
+.bn-kpi, .bn-scale-row, .bn-sys-row { transition: border-color .2s ease, background .2s ease; }
+.bn-kpi:hover { border-color: #d7dde3; }
 .bn-hostel.warn { border-left-color: var(--bn-orange); }
 .bn-hostel.high { border-left-color: var(--bn-red); }
 .bn-hostel.off { border-left-color: var(--bn-faint); }
@@ -2313,19 +2324,21 @@ section.page-section.active:not(.hero) {
 /* ---- insight tiles ---- */
 .bn-insights {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 12px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
 }
 .bn-insight {
   background: var(--bn-card);
   border: 1px solid var(--bn-border);
   border-radius: 12px;
   box-shadow: var(--bn-shadow);
-  padding: 14px;
+  padding: 16px 18px;
   display: flex;
-  gap: 11px;
-  align-items: flex-start;
+  gap: 12px;
+  align-items: center;
+  transition: box-shadow .2s ease, transform .2s ease;
 }
+.bn-insight:hover { box-shadow: 0 6px 16px rgba(16, 24, 40, .09); transform: translateY(-2px); }
 .bn-insight .bn-kpi-ico { width: 36px; height: 36px; }
 .bn-insight p { font-size: .66rem; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; color: var(--bn-muted); }
 .bn-insight h5 { font-size: .98rem; color: var(--bn-ink); line-height: 1.25; }

@@ -43,10 +43,10 @@
   /* ---------------- AUTH ---------------- */
   const AUTH_KEY = 'foodwatch_auth';
   const ROLE_KEY = 'foodwatch_role';
-  const ACCOUNTS = CFG.ACCOUNTS || [
-    { username: CFG.AUTH_USERNAME || 'admin', password: CFG.AUTH_PASSWORD || 'foodwatch2026', role: 'admin' }
-  ];
+  const TOKEN_KEY = 'foodwatch_token';
+  const ACCOUNTS = CFG.ACCOUNTS || [];
   let role = 'admin';
+  let adminToken = localStorage.getItem(TOKEN_KEY) || '';
 
   function applyRole(r) {
     role = (r === 'user') ? 'user' : 'admin';
@@ -59,22 +59,43 @@
       chip.className = 'bn-role-chip ' + role;
       chip.hidden = false;
     }
-    // writable actions are admin-only
-    $('addReadingBtn').hidden = !(serverConfig.writeEnabled && role === 'admin');
+    // writable actions require admin role AND a server-issued token
+    $('addReadingBtn').hidden = !(serverConfig.writeEnabled && role === 'admin' && adminToken);
   }
 
   function showApp(show) { $('dashLogin').hidden = show; $('dashApp').hidden = !show; }
 
-  $('loginForm').addEventListener('submit', e => {
+  // Resolve a login: viewer accounts are checked in the browser; admin is
+  // verified server-side (/api/login) which returns a token for writes.
+  async function resolveLogin(u, p) {
+    const acct = ACCOUNTS.find(a => a.username === u && a.password === p);
+    if (acct) return { role: acct.role, token: '' };
+    try {
+      const r = await fetch(API + '/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: u, password: p })
+      });
+      if (r.ok) { const j = await r.json(); return { role: 'admin', token: j.token || '' }; }
+    } catch (e) { /* server unreachable */ }
+    return null;
+  }
+
+  $('loginForm').addEventListener('submit', async e => {
     e.preventDefault();
+    const btn = $('loginForm').querySelector('button[type="submit"]');
     const u = $('loginUser').value.trim();
     const p = $('loginPass').value;
-    const acct = ACCOUNTS.find(a => a.username === u && a.password === p);
-    if (acct) {
+    btn.disabled = true; $('loginErr').hidden = true;
+    const res = await resolveLogin(u, p);
+    btn.disabled = false;
+    if (res) {
+      adminToken = res.token || '';
       localStorage.setItem(AUTH_KEY, '1');
-      localStorage.setItem(ROLE_KEY, acct.role);
-      $('loginErr').hidden = true;
-      applyRole(acct.role);
+      localStorage.setItem(ROLE_KEY, res.role);
+      if (adminToken) localStorage.setItem(TOKEN_KEY, adminToken);
+      else localStorage.removeItem(TOKEN_KEY);
+      applyRole(res.role);
       showApp(true); start();
     } else {
       $('loginErr').textContent = '✗ Invalid username or password.';
@@ -82,13 +103,17 @@
     }
   });
   $('dashLogout').addEventListener('click', () => {
+    adminToken = '';
     localStorage.removeItem(AUTH_KEY);
     localStorage.removeItem(ROLE_KEY);
+    localStorage.removeItem(TOKEN_KEY);
     stop(); showApp(false); $('loginForm').reset();
   });
   if (CFG.SHOW_LOGIN_HINT) {
-    $('loginHint').innerHTML = 'Demo → ' + ACCOUNTS.map(a =>
-      `<b>${a.username}</b> / <b>${a.password}</b> <span class="lh-role">(${a.role})</span>`).join(' &nbsp;·&nbsp; ');
+    const viewer = ACCOUNTS.find(a => a.role === 'user');
+    const parts = [`<b>${CFG.ADMIN_HINT || 'admin'}</b> <span class="lh-role">(admin · server-verified)</span>`];
+    if (viewer) parts.push(`<b>${viewer.username}</b> / <b>${viewer.password}</b> <span class="lh-role">(viewer)</span>`);
+    $('loginHint').innerHTML = 'Demo → ' + parts.join(' &nbsp;·&nbsp; ');
     $('loginHint').hidden = false;
   }
 
@@ -246,9 +271,17 @@
   let scope = 0;
   const scopedHostel = () => scope ? lastHostels.find(x => x.code === scope) : null;
 
+  function fadeCenter() {
+    const c = document.querySelector('.bn-center');
+    if (!c) return;
+    c.classList.remove('bn-switching');
+    void c.offsetWidth;          // restart the animation
+    c.classList.add('bn-switching');
+  }
   function openHostel(code) {
     scope = (scope === code) ? 0 : code;
     renderAll();
+    fadeCenter();
     document.querySelector('.bn-head-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
   function onRailClick(e) {
@@ -257,7 +290,7 @@
   }
   $('railLeft').addEventListener('click', onRailClick);
   $('railRight').addEventListener('click', onRailClick);
-  $('btnOverview').addEventListener('click', () => { scope = 0; renderAll(); });
+  $('btnOverview').addEventListener('click', () => { scope = 0; renderAll(); fadeCenter(); });
 
   function renderHead(h) {
     const badge = $('bnScopeBadge');
@@ -480,28 +513,18 @@
     const co2Saved = Math.round(savedKg * CO2);
 
     if (h) {
-      // per-hostel insights: best/worst day over the previous 7 full days
-      const days = h.stats.days30.slice(22, 29);
-      const bestDay = days.slice().sort((a, b) => a.kg - b.kg)[0];
-      const worstDay = days.slice().sort((a, b) => b.kg - a.kg)[0];
-      const dName = d => d.date.toLocaleDateString([], { weekday: 'short' });
+      // per-hostel: efficiency, peak time, CO₂ saved (three focused stats)
       $('bnInsights').innerHTML =
         tile('trophy', 'green', 'Efficiency Score', h.stats.eff + '%', h.stats.eff >= 85 ? 'Excellent' : h.stats.eff >= 70 ? 'Good' : 'Needs attention', h.stats.eff >= 70 ? 'g' : 'r') +
-        tile('cal', 'green', 'Best Day (7d)', bestDay ? dName(bestDay) + ' · ' + bestDay.kg.toFixed(1) + ' kg' : '—', 'Lowest waste', 'g') +
-        tile('alert', 'orange', 'Worst Day (7d)', worstDay ? dName(worstDay) + ' · ' + worstDay.kg.toFixed(1) + ' kg' : '—', 'Highest waste', 'r') +
         tile('clock', 'orange', 'Peak Waste Time', pkTxt, pkSub, 'm') +
-        tile('leaf', 'green', 'CO₂ Saved (est.)', nf(co2Saved) + ' kg', 'vs last week', 'g');
+        tile('leaf', 'green', 'CO₂ Saved (est.)', nf(co2Saved) + ' kg', '≈ ' + (co2Saved / 970).toFixed(1) + ' trees · vs last week', 'g');
       return;
     }
-    const ranked = hostels.slice().sort((a, b) => b.stats.today - a.stats.today);
     const best = hostels.slice().sort((a, b) => b.stats.eff - a.stats.eff)[0];
-    const worst = ranked[0];
     $('bnInsights').innerHTML =
-      tile('trophy', 'orange', 'Best Performing Hostel', best ? best.name + ' Hostel' : '—', best ? best.stats.eff + '% Efficiency' : '', 'g') +
-      tile('alert', 'orange', 'Highest Waste Hostel', worst ? worst.name + ' Hostel' : '—', worst ? worst.stats.today.toFixed(1) + ' kg Today' : '', 'r') +
+      tile('trophy', 'green', 'Best Performing Hostel', best ? best.name + ' Hostel' : '—', best ? best.stats.eff + '% Efficiency' : '', 'g') +
       tile('clock', 'orange', 'Peak Waste Time', pkTxt, pkSub, 'm') +
-      tile('leaf', 'green', 'Total CO₂ Saved (est.)', nf(co2Saved) + ' kg', '≈ ' + (co2Saved / 970).toFixed(1) + ' Trees Saved', 'g') +
-      tile('rupee', 'orange', 'Total Money Lost', '₹' + nf(Math.round(s.today * PRICE)), 'Today', 'm');
+      tile('leaf', 'green', 'Total CO₂ Saved (est.)', nf(co2Saved) + ' kg', '≈ ' + (co2Saved / 970).toFixed(1) + ' Trees Saved', 'g');
   }
 
   /* ---------------- RENDER: AI reco ---------------- */
@@ -702,7 +725,7 @@
     try {
       const r = await fetch(API + '/api/reading', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
         body: JSON.stringify({ weight: w, hostel: $('logHostel').value })
       });
       const j = await r.json().catch(() => ({}));
@@ -713,6 +736,8 @@
         setTimeout(() => { $('logModal').hidden = true; refresh(); }, 1200);
       } else if (r.ok && j.entry_id === 0) {
         $('logMsg').textContent = '⚠ Rate limited — wait 15s and try again';
+      } else if (r.status === 403 || r.status === 503) {
+        $('logMsg').textContent = '✗ Admin session expired — please sign in again';
       } else {
         $('logMsg').textContent = '✗ ' + (j.error || 'failed');
       }
@@ -727,26 +752,6 @@
     $('bnToasts').appendChild(t);
     requestAnimationFrame(() => t.classList.add('show'));
     setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 350); }, 4000);
-  }
-
-  /* ---------------- RENDER: savings strip ---------------- */
-  function renderStrip(hostels, s, h) {
-    const savedKg = Math.max(s.prevWeek7 - s.week7, s.week7 * 0.05);
-    const active = hostels.filter(x => x.source !== 'none').length;
-    const accuracy = (100 - (hostels.length - active) * 0.4 - 0.2).toFixed(1);
-    const cell = (ico, color, label, value, sub, subCls) =>
-      `<div class="bn-strip-cell"><span class="bn-kpi-ico ${color}">${svg(ico)}</span>
-        <div><p>${label}</p><h6>${value}</h6><small class="${subCls || ''}">${sub}</small></div></div>`;
-    const scaleCell = h
-      ? cell('build', 'green', 'Waste Scale', h.source === 'none' ? 'Offline' : 'Online', h.source === 'live' ? 'ThingSpeak' : h.source === 'sim' ? 'Simulated' : '—', 'm')
-      : cell('build', 'green', 'Active Hostels', active + ' / ' + hostels.length, active === hostels.length ? '100% Operational' : 'Partial coverage');
-    $('bnStrip').innerHTML =
-      cell('drop', 'blue', 'Water Saved (est.)', nf(Math.round(savedKg * 16)) + ' L', 'vs last week') +
-      cell('leaf', 'green', 'Food Saved (est.)', nf(Math.round(savedKg)) + ' kg', 'vs last week') +
-      cell('meal', 'teal', 'Meals Saved (est.)', nf(Math.round(savedKg / KG_MEAL)), 'vs last week') +
-      cell('bolt', 'orange', 'Energy Saved (est.)', nf(Math.round(savedKg * 2.7)) + ' kWh', 'vs last week') +
-      scaleCell +
-      cell('disc', 'indigo', 'Data Accuracy', accuracy + '%', 'Excellent', 'm');
   }
 
   /* ---------------- MAIN ---------------- */
@@ -777,7 +782,6 @@
     renderAlerts(lastHostels, h);
     renderSystem(lastHostels, s, h);
     renderTop5(lastHostels, h);
-    renderStrip(lastHostels, s, h);
     $('dashNote').textContent = '© 2026 IIT Guwahati Waste Monitor · WasteWise · Last updated ' + new Date().toLocaleTimeString();
   }
 
