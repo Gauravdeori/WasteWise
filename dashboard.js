@@ -376,30 +376,23 @@
     return `<span class="bn-kpi-delta ${cls}">${arrow} ${Math.abs(pct)}% vs yesterday</span>`;
   }
   function renderKpis(s, h) {
-    const popScope = h ? POP : POP * HOSTELS.length;
-    const now = hourOf(new Date());
-    const sessionsDone = MEALS.filter(m => now >= m.start && m.key !== 'snacks').length;
-    const meals = Math.round(popScope * sessionsDone * 0.87);
     const kpi = (ico, color, label, value, unit, deltaHtml) =>
       `<div class="bn-kpi"><span class="bn-kpi-ico ${color}">${svg(ico)}</span>
         <div class="bn-kpi-body"><p>${label}</p><h5>${value} <small>${unit}</small></h5>${deltaHtml}</div></div>`;
     $('bnKpis').innerHTML =
       kpi('trash', 'green', h ? 'Waste Today' : 'Total Waste Today', nf(+s.today.toFixed(1)), 'kg', delta(s.today, s.yday)) +
-      kpi('rupee', 'orange', 'Value Lost', '₹' + nf(Math.round(s.today * PRICE)), '', delta(s.today, s.yday)) +
-      kpi('cloud', 'indigo', 'CO₂ Footprint', nf(Math.round(s.today * CO2)), 'kg', delta(s.today, s.yday)) +
-      kpi('meal', 'teal', 'Meals Served', nf(meals), '', '<span class="bn-kpi-delta flat">est. today</span>') +
-      kpi('user', 'blue', 'Per Capita Waste', Math.round(s.today * 1000 / popScope), 'g', delta(s.today, s.yday));
+      kpi('rupee', 'orange', 'Value Lost (est.)', '₹' + nf(Math.round(s.today * PRICE)), '', delta(s.today, s.yday));
   }
 
   /* ---------------- RENDER: trend ---------------- */
   let trendDays = 30, lastScope = null;
   function renderTrend(s) {
     const days = s.days30.slice(30 - trendDays);
-    const W = 460, H = 190, L = 34, B = 22, T = 10;
+    const W = 900, H = 300, L = 46, B = 30, T = 16, R = 12;
     const max = Math.max(...days.map(d => d.kg), 1);
     const step = max > 400 ? 100 : max > 100 ? 50 : max > 40 ? 20 : max > 8 ? 5 : 2;
     const niceMax = Math.ceil(max / step) * step;
-    const x = i => L + (i / (days.length - 1)) * (W - L - 8);
+    const x = i => L + (i / (days.length - 1)) * (W - L - R);
     const y = v => H - B - (v / niceMax) * (H - B - T);
     const pts = days.map((d, i) => [x(i), y(d.kg)]);
     let path = `M ${pts[0][0]} ${pts[0][1]}`;
@@ -412,22 +405,25 @@
     let grid = '';
     for (let i = 0; i <= 4; i++) {
       const v = niceMax * i / 4, gy = y(v);
-      grid += `<line x1="${L}" y1="${gy}" x2="${W - 8}" y2="${gy}" stroke="#eef1f4" stroke-width="1"/>
-               <text x="${L - 6}" y="${gy + 3}" font-size="8" fill="#98a2b3" text-anchor="end">${Math.round(v)}</text>`;
+      grid += `<line x1="${L}" y1="${gy}" x2="${W - R}" y2="${gy}" stroke="#eef1f4" stroke-width="1"/>
+               <text x="${L - 8}" y="${gy + 4}" font-size="12" fill="#98a2b3" text-anchor="end">${Math.round(v)}</text>`;
     }
+    // marker dots on each data point
+    const dots = pts.map((p, i) => `<circle cx="${p[0]}" cy="${p[1]}" r="${i === pts.length - 1 ? 4 : 2.4}" fill="#16a34a"/>`).join('');
     $('bnTrend').innerHTML = `
       <defs><linearGradient id="bnArea" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#22c55e" stop-opacity=".3"/>
+        <stop offset="0%" stop-color="#22c55e" stop-opacity=".28"/>
         <stop offset="100%" stop-color="#22c55e" stop-opacity=".02"/>
       </linearGradient></defs>
       ${grid}
       <path d="${area}" fill="url(#bnArea)"/>
-      <path d="${path}" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round"/>`;
+      <path d="${path}" fill="none" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round"/>
+      ${dots}`;
     const fmt = d => d.toLocaleDateString([], { day: '2-digit', month: 'short' });
     $('bnTrendAxis').innerHTML =
       `<span>${fmt(days[0].date)}</span><span>${fmt(days[Math.floor(days.length / 2)].date)}</span><span>${fmt(days[days.length - 1].date)}</span>`;
     $('trendDaysLbl').textContent = '(' + trendDays + ' Days)';
-    trendGeom = { days, L, W, R: 8 };
+    trendGeom = { days, L, W, R };
   }
   $('trendRange').addEventListener('change', e => { trendDays = +e.target.value; if (lastScope) renderTrend(lastScope); });
 

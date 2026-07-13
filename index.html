@@ -521,21 +521,22 @@
               <div class="bn-kpis" id="bnKpis"></div>
             </section>
 
-            <div class="bn-mid">
-              <section class="bn-card bn-trend-card">
-                <div class="bn-card-head">
-                  <h4>Waste Trend <small id="trendDaysLbl">(30 Days)</small></h4>
-                  <select id="trendRange" class="bn-mini-select">
-                    <option value="30">30 Days</option>
-                    <option value="14">14 Days</option>
-                    <option value="7">7 Days</option>
-                  </select>
-                </div>
-                <svg id="bnTrend" viewBox="0 0 460 190" preserveAspectRatio="none" aria-label="Waste trend"></svg>
-                <div class="bn-tooltip" id="trendTip" hidden></div>
-                <div class="bn-axis" id="bnTrendAxis"></div>
-              </section>
+            <!-- Main analytics — big hero trend chart -->
+            <section class="bn-card bn-trend-card bn-hero-chart">
+              <div class="bn-card-head">
+                <h4>Waste Trend <small id="trendDaysLbl">(30 Days)</small></h4>
+                <select id="trendRange" class="bn-mini-select">
+                  <option value="30">30 Days</option>
+                  <option value="14">14 Days</option>
+                  <option value="7">7 Days</option>
+                </select>
+              </div>
+              <svg id="bnTrend" viewBox="0 0 900 300" preserveAspectRatio="none" aria-label="Waste trend"></svg>
+              <div class="bn-tooltip" id="trendTip" hidden></div>
+              <div class="bn-axis" id="bnTrendAxis"></div>
+            </section>
 
+            <div class="bn-analytics2">
               <section class="bn-card bn-donut-card">
                 <div class="bn-card-head"><h4>Waste by Meal <small>(This Week)</small></h4></div>
                 <div class="bn-donut-wrap">
