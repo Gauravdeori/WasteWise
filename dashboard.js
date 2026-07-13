@@ -289,7 +289,6 @@
     if (card) openHostel(+card.dataset.code);
   }
   $('railLeft').addEventListener('click', onRailClick);
-  $('railRight').addEventListener('click', onRailClick);
   $('btnOverview').addEventListener('click', () => { scope = 0; renderAll(); fadeCenter(); });
 
   function renderHead(h) {
@@ -363,8 +362,7 @@
         </div>
       </div>`;
     };
-    $('railLeft').innerHTML = hostels.slice(0, 7).map(card).join('');
-    $('railRight').innerHTML = hostels.slice(7).map(card).join('');
+    $('railLeft').innerHTML = hostels.map(card).join('');
   }
 
   /* ---------------- RENDER: KPIs ---------------- */
