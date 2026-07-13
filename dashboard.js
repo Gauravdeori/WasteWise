@@ -42,15 +42,39 @@
 
   /* ---------------- AUTH ---------------- */
   const AUTH_KEY = 'foodwatch_auth';
+  const ROLE_KEY = 'foodwatch_role';
+  const ACCOUNTS = CFG.ACCOUNTS || [
+    { username: CFG.AUTH_USERNAME || 'admin', password: CFG.AUTH_PASSWORD || 'foodwatch2026', role: 'admin' }
+  ];
+  let role = 'admin';
+
+  function applyRole(r) {
+    role = (r === 'user') ? 'user' : 'admin';
+    const app = $('dashApp');
+    app.classList.toggle('role-user', role === 'user');
+    app.classList.toggle('role-admin', role === 'admin');
+    const chip = $('roleChip');
+    if (chip) {
+      chip.textContent = role === 'admin' ? 'Admin' : 'Viewer';
+      chip.className = 'bn-role-chip ' + role;
+      chip.hidden = false;
+    }
+    // writable actions are admin-only
+    $('addReadingBtn').hidden = !(serverConfig.writeEnabled && role === 'admin');
+  }
+
   function showApp(show) { $('dashLogin').hidden = show; $('dashApp').hidden = !show; }
 
   $('loginForm').addEventListener('submit', e => {
     e.preventDefault();
-    const ok = $('loginUser').value.trim() === (CFG.AUTH_USERNAME || 'admin') &&
-               $('loginPass').value === (CFG.AUTH_PASSWORD || 'foodwatch2026');
-    if (ok) {
+    const u = $('loginUser').value.trim();
+    const p = $('loginPass').value;
+    const acct = ACCOUNTS.find(a => a.username === u && a.password === p);
+    if (acct) {
       localStorage.setItem(AUTH_KEY, '1');
+      localStorage.setItem(ROLE_KEY, acct.role);
       $('loginErr').hidden = true;
+      applyRole(acct.role);
       showApp(true); start();
     } else {
       $('loginErr').textContent = '✗ Invalid username or password.';
@@ -59,10 +83,12 @@
   });
   $('dashLogout').addEventListener('click', () => {
     localStorage.removeItem(AUTH_KEY);
+    localStorage.removeItem(ROLE_KEY);
     stop(); showApp(false); $('loginForm').reset();
   });
   if (CFG.SHOW_LOGIN_HINT) {
-    $('loginHint').innerHTML = 'Demo login → <b>' + (CFG.AUTH_USERNAME || 'admin') + '</b> / <b>' + (CFG.AUTH_PASSWORD || 'foodwatch2026') + '</b>';
+    $('loginHint').innerHTML = 'Demo → ' + ACCOUNTS.map(a =>
+      `<b>${a.username}</b> / <b>${a.password}</b> <span class="lh-role">(${a.role})</span>`).join(' &nbsp;·&nbsp; ');
     $('loginHint').hidden = false;
   }
 
@@ -657,7 +683,7 @@
       const r = await fetch(API + '/api/config', { cache: 'no-store' });
       if (r.ok) serverConfig = await r.json();
     } catch (e) { /* backend down — button stays hidden */ }
-    $('addReadingBtn').hidden = !serverConfig.writeEnabled;
+    $('addReadingBtn').hidden = !(serverConfig.writeEnabled && role === 'admin');
   }
   $('addReadingBtn').addEventListener('click', () => {
     $('logHostel').innerHTML = HOSTELS.map((n, i) =>
@@ -793,6 +819,8 @@
     if (clockTimer) { clearInterval(clockTimer); clockTimer = null; }
   }
 
-  if (localStorage.getItem(AUTH_KEY) === '1') { showApp(true); start(); }
-  else showApp(false);
+  if (localStorage.getItem(AUTH_KEY) === '1') {
+    applyRole(localStorage.getItem(ROLE_KEY) || 'admin');
+    showApp(true); start();
+  } else showApp(false);
 })();

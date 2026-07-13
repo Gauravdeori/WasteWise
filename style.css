@@ -2167,6 +2167,29 @@ section.page-section.active:not(.hero) {
 .bn-iconbtn.spin::after { content: ''; }
 @keyframes bnSpin { to { transform: rotate(360deg); } }
 .bn-iconbtn.spin { animation: bnSpin .8s linear infinite; }
+
+/* ---- role-based views ---- */
+.bn-role-chip {
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .5px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  align-self: center;
+  margin-right: 4px;
+}
+.bn-role-chip.admin { background: var(--bn-indigo-bg); color: var(--bn-indigo); }
+.bn-role-chip.user  { background: var(--bn-green-bg); color: var(--bn-green); }
+.login-hint .lh-role { color: var(--bn-faint); font-weight: 500; }
+
+/* viewer role: hide admin-only widgets and reflow the grids */
+.role-user .admin-only { display: none !important; }
+.role-user .bn-mid { grid-template-columns: 1.55fr 1fr; }
+.role-user .bn-low { grid-template-columns: 1fr; }
+.role-user .bn-low > .bn-card { max-width: 560px; }
+@media (max-width: 1360px) {
+  .role-user .bn-mid { grid-template-columns: 1fr; }
+}
 .bn-hostel.warn { border-left-color: var(--bn-orange); }
 .bn-hostel.high { border-left-color: var(--bn-red); }
 .bn-hostel.off { border-left-color: var(--bn-faint); }

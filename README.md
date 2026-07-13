@@ -101,15 +101,21 @@ buckets readings by that code. Each hostel's ESP32 sets its own `HOSTEL_CODE` (s
 `TS_*` values as environment variables there. GitHub Pages can't run the backend, so it
 isn't suitable for the full app.
 
-### Login
-The dashboard opens on a **sign-in screen**. Default credentials (change in `config.js`):
-```
-username: admin
-password: foodwatch2026
-```
-> This is **demo-level** auth (checked in the browser, session stored in `localStorage`) —
-> fine for a project/demo, but not real security. For production, put the data behind a
-> server with real accounts.
+### Login & roles
+The dashboard opens on a **sign-in screen**. There are two demo accounts (in
+`config.ACCOUNTS`), and the matched account's **role** decides how much is shown:
+
+| Role | Username | Password | Sees |
+|------|----------|----------|------|
+| **Admin** | `admin` | `foodwatch2026` | Everything: device monitor, WiFi signal, alerts, AI recommendation, CSV export, and the "Log Reading" control |
+| **Viewer** | `user` | `wastewise2026` | A simplified, view-only dashboard — KPIs, waste trend, waste-by-meal, insights, hostel rails and top-5 (no device/alert/admin controls) |
+
+Add or edit accounts in `config.js` → `ACCOUNTS`. Admin-only widgets are marked with the
+`admin-only` class and hidden via `.role-user .admin-only { display: none }`.
+
+> This is **demo-level** auth (checked in the browser, role stored in `localStorage`) —
+> fine for a project/demo, but not real access control. Anyone can still reach the API
+> directly, so for production enforce roles server-side with real sessions.
 
 ---
 

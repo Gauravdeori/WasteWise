@@ -35,9 +35,14 @@ window.FOODWATCH_CONFIG = {
   MONTHLY_TARGET_KG: 1000,       // reduction target used for the progress bar
   MAX_FEED_RESULTS: 8000,        // how many recent entries to fetch (ThingSpeak max is 8000)
 
-  /* Dashboard login (demo auth — stored in the browser only) */
-  AUTH_USERNAME: 'admin',
-  AUTH_PASSWORD: 'foodwatch2026',
+  /* Dashboard logins (demo auth — checked in the browser only).
+     The matched account's role decides how much is shown:
+       'admin' → full dashboard (devices, alerts, AI, export, logging)
+       'user'  → simplified, view-only dashboard (fewer details) */
+  ACCOUNTS: [
+    { username: 'admin', password: 'foodwatch2026', role: 'admin' },
+    { username: 'user',  password: 'wastewise2026', role: 'user' }
+  ],
   SHOW_LOGIN_HINT: true,
 
   /* IIT Guwahati hostels — index + 1 is the hostel's code (ESP32 field2) */
