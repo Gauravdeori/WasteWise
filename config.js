@@ -40,8 +40,9 @@ window.FOODWATCH_CONFIG = {
                gets a token that the write endpoint requires. Not stored here.
        user  → view-only accounts checked in the browser (read-only, low risk). */
   ACCOUNTS: [
-    { username: 'user', password: 'wastewise2026', role: 'user' }
-  ],
+      { username: 'admin', password: 'foodwatch2026', role: 'admin', token: 'demo-token' },
+      { username: 'user', password: 'wastewise2026', role: 'user' }
+    ],
   ADMIN_HINT: 'admin',            // just the username shown on the login hint
   SHOW_LOGIN_HINT: true,
 

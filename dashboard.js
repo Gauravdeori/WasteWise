@@ -69,7 +69,7 @@
   // verified server-side (/api/login) which returns a token for writes.
   async function resolveLogin(u, p) {
     const acct = ACCOUNTS.find(a => a.username === u && a.password === p);
-    if (acct) return { role: acct.role, token: '' };
+    if (acct) return { role: acct.role, token: acct.token || '' };
     try {
       const r = await fetch(API + '/api/login', {
         method: 'POST',
