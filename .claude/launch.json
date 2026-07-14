@@ -5,7 +5,14 @@
       "name": "landing-page",
       "runtimeExecutable": "node",
       "runtimeArgs": ["server.js"],
-      "port": 5173
+      "port": 5173,
+      "autoPort": true
+    },
+    {
+      "name": "portfolio",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--prefix", "C:/Users/Gaura/Downloads/asfgwg-main"],
+      "port": 8080
     }
   ]
 }
