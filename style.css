@@ -2001,6 +2001,15 @@ section.page-section.active:not(.hero) {
   gap: 14px;
   align-items: start;
 }
+.bn-rail-col {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.bn-rail-col .bn-insights {
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
 .bn-rail { 
   display: flex; 
   flex-direction: column; 
@@ -2595,6 +2604,7 @@ section.page-section.active:not(.hero) {
   .bn-grid { grid-template-columns: 1fr; }
   .bn-rail { flex-direction: row; flex-wrap: wrap; }
   .bn-rail .bn-hostel { flex: 1 1 210px; }
+  .bn-rail-col .bn-insights { grid-template-columns: repeat(3, 1fr); }
   .bn-analytics-main { grid-template-columns: 1fr; }
   .bn-analytics2 { grid-template-columns: 1fr; }
 }
