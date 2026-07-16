@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&family=Fraunces:opsz,wght@9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=3" />
+  <link rel="stylesheet" href="style.css?v=11" />
 </head>
 <body>
 
@@ -249,6 +249,14 @@
             guided by an experienced mentor.</p>
         </div>
         <div class="team-grid">
+          <div class="team-card coordinator-card reveal">
+            <div class="team-photo">
+              <img src="assets/pratiksha-sarma.png" alt="Coordinator" loading="lazy" />
+            </div>
+            <span class="badge">Coordinator</span>
+            <h4>Dr. Pratiksha Sarma</h4>
+            <p>Project Coordinator</p>
+          </div>
           <div class="team-card mentor-card reveal">
             <div class="team-photo">
               <img src="assets/mentor.jpg" alt="Mentor" loading="lazy" />
@@ -497,6 +505,9 @@
             <button class="bn-iconbtn admin-only" id="addReadingBtn" title="Log a reading" hidden>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
             </button>
+            <button class="bn-iconbtn danger admin-only" id="resetBtn" title="Reset all hostel data" hidden>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9 7V4.5h6V7"/><path d="M6 7l1 14h10l1-14"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+            </button>
             <button class="bn-iconbtn" id="dashRefresh" title="Refresh now">⟳</button>
             <button class="bn-iconbtn danger" id="dashLogout" title="Sign out">⎋</button>
           </div>
@@ -518,23 +529,35 @@
                 </div>
                 <span class="bn-scope-chip" id="bnScopeBadge" hidden></span>
               </div>
-              <div class="bn-kpis" id="bnKpis"></div>
             </section>
 
-            <!-- Main analytics — big hero trend chart -->
-            <section class="bn-card bn-trend-card bn-hero-chart">
-              <div class="bn-card-head">
-                <h4>Waste Trend <small id="trendDaysLbl">(30 Days)</small></h4>
-                <select id="trendRange" class="bn-mini-select">
-                  <option value="30">30 Days</option>
-                  <option value="14">14 Days</option>
-                  <option value="7">7 Days</option>
-                </select>
-              </div>
-              <svg id="bnTrend" viewBox="0 0 900 300" preserveAspectRatio="none" aria-label="Waste trend"></svg>
-              <div class="bn-tooltip" id="trendTip" hidden></div>
-              <div class="bn-axis" id="bnTrendAxis"></div>
-            </section>
+            <!-- Main analytics: waste trend (left) + live readings feed (right) -->
+            <div class="bn-analytics-main">
+              <section class="bn-card bn-trend-card">
+                <div class="bn-card-head">
+                  <h4>Waste Trend <small id="trendDaysLbl">(30 Days)</small></h4>
+                  <select id="trendRange" class="bn-mini-select">
+                    <option value="30">30 Days</option>
+                    <option value="14">14 Days</option>
+                    <option value="7">7 Days</option>
+                  </select>
+                </div>
+                <svg id="bnTrend" viewBox="0 0 560 300" preserveAspectRatio="none" aria-label="Waste trend"></svg>
+                <div class="bn-tooltip" id="trendTip" hidden></div>
+                <div class="bn-axis" id="bnTrendAxis"></div>
+              </section>
+
+              <section class="bn-card bn-feed-card">
+                <div class="bn-card-head">
+                  <h4>Live Readings <small id="feedScope">(all hostels)</small></h4>
+                  <span class="bn-feed-live"><span class="bn-dot"></span> LIVE</span>
+                </div>
+                <div class="bn-feed" id="bnFeed"></div>
+              </section>
+            </div>
+
+            <!-- Summary KPIs (Total Waste Today and Value Lost) -->
+            <div class="bn-kpis" id="bnKpis"></div>
 
             <div class="bn-analytics2">
               <section class="bn-card bn-donut-card">
@@ -624,6 +647,21 @@
               </div>
               <p class="bn-modal-msg" id="logMsg"></p>
             </form>
+          </div>
+        </div>
+
+        <!-- Reset-data confirmation modal -->
+        <div class="bn-modal" id="resetModal" hidden>
+          <div class="bn-modal-card">
+            <h4>⚠️ Reset all hostel data?</h4>
+            <p>This permanently deletes <strong>every reading</strong> from the ThingSpeak
+              channel for all 14 hostels. Live and simulated history will be cleared and
+              cannot be recovered.</p>
+            <div class="bn-modal-actions">
+              <button type="button" class="bn-back" id="resetCancel">Cancel</button>
+              <button type="button" class="btn btn-danger" id="resetConfirm">Delete all data</button>
+            </div>
+            <p class="bn-modal-msg" id="resetMsg"></p>
           </div>
         </div>
 
@@ -736,8 +774,8 @@
     </div>
   </footer>
 
-  <script src="config.js?v=3"></script>
+  <script src="config.js?v=5"></script>
   <script src="script.js"></script>
-  <script src="dashboard.js?v=3"></script>
+  <script src="dashboard.js?v=6"></script>
 </body>
 </html>

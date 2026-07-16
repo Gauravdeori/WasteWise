@@ -40,7 +40,7 @@ window.FOODWATCH_CONFIG = {
                gets a token that the write endpoint requires. Not stored here.
        user  → view-only accounts checked in the browser (read-only, low risk). */
   ACCOUNTS: [
-      { username: 'admin', password: 'foodwatch2026', role: 'admin', token: 'demo-token' },
+      { username: 'admin', password: 'foodwatch2026', role: 'admin', token: '8f60115f5639389f175c07cd05964a0c67bb1218bf4357bd' },
       { username: 'user', password: 'wastewise2026', role: 'user' }
     ],
   ADMIN_HINT: 'admin',            // just the username shown on the login hint
@@ -54,5 +54,5 @@ window.FOODWATCH_CONFIG = {
 
   /* Fill hostels with no real data yet with simulated data (for demos).
      Set false once all 14 boards are live to show ONLY real data. */
-  DEMO_FILL: true
+  DEMO_FILL: false
 };

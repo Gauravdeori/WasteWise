@@ -61,23 +61,42 @@
     }
     // writable actions require admin role AND a server-issued token
     $('addReadingBtn').hidden = !(serverConfig.writeEnabled && role === 'admin' && adminToken);
+    $('resetBtn').hidden = !(role === 'admin' && adminToken);
   }
 
-  function showApp(show) { $('dashLogin').hidden = show; $('dashApp').hidden = !show; }
+  function showApp(show) {
+    $('dashLogin').hidden = show;
+    $('dashApp').hidden = !show;
+    const sec = $('dashboard');
+    if (sec) {
+      if (show) {
+        sec.classList.remove('login-mode');
+      } else {
+        sec.classList.add('login-mode');
+      }
+    }
+  }
 
   // Resolve a login: viewer accounts are checked in the browser; admin is
   // verified server-side (/api/login) which returns a token for writes.
   async function resolveLogin(u, p) {
-    const acct = ACCOUNTS.find(a => a.username === u && a.password === p);
-    if (acct) return { role: acct.role, token: acct.token || '' };
+    // Try server-side authentication first so we get the dynamic live token
     try {
       const r = await fetch(API + '/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: u, password: p })
+        body: JSON.stringify({ username: u, password: p }),
+        cache: 'no-store'
       });
-      if (r.ok) { const j = await r.json(); return { role: 'admin', token: j.token || '' }; }
-    } catch (e) { /* server unreachable */ }
+      if (r.ok) {
+        const j = await r.json();
+        return { role: j.role || 'admin', token: j.token || '' };
+      }
+    } catch (e) { /* server unreachable — fallback to local config */ }
+
+    // Fallback to static accounts check
+    const acct = ACCOUNTS.find(a => a.username === u && a.password === p);
+    if (acct) return { role: acct.role, token: acct.token || '' };
     return null;
   }
 
@@ -339,6 +358,9 @@
 
   /* ---------------- RENDER: hostel rails ---------------- */
   function renderRails(hostels) {
+    const rail = $('railLeft');
+    if (!rail) return;
+
     const live = currentMeal();
     const sessTxt = live ? live.name + ' Running' : 'Idle';
     const sessTime = live ? t12(new Date()) : 'Next ' + nextMeal().startTxt;
@@ -362,7 +384,35 @@
         </div>
       </div>`;
     };
-    $('railLeft').innerHTML = hostels.map(card).join('');
+
+    const cardsHtml = hostels.map(card).join('');
+    if (scope === 0) {
+      rail.classList.add('auto-scroll');
+      rail.innerHTML = `
+        <div class="bn-rail-scroll">
+          <div class="bn-rail-group">
+            ${cardsHtml}
+          </div>
+          <div class="bn-rail-group" aria-hidden="true">
+            ${cardsHtml}
+          </div>
+        </div>`;
+    } else {
+      rail.classList.remove('auto-scroll');
+      rail.innerHTML = `
+        <div class="bn-rail-scroll">
+          <div class="bn-rail-group">
+            ${cardsHtml}
+          </div>
+        </div>`;
+      // Scroll the active hostel card into view
+      setTimeout(() => {
+        const activeCard = rail.querySelector('.bn-hostel.active');
+        if (activeCard) {
+          activeCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }, 50);
+    }
   }
 
   /* ---------------- RENDER: KPIs ---------------- */
@@ -386,7 +436,7 @@
   let trendDays = 30, lastScope = null;
   function renderTrend(s) {
     const days = s.days30.slice(30 - trendDays);
-    const W = 900, H = 300, L = 46, B = 30, T = 16, R = 12;
+    const W = 560, H = 300, L = 42, B = 30, T = 16, R = 12;
     const max = Math.max(...days.map(d => d.kg), 1);
     const step = max > 400 ? 100 : max > 100 ? 50 : max > 40 ? 20 : max > 8 ? 5 : 2;
     const niceMax = Math.ceil(max / step) * step;
@@ -445,6 +495,39 @@
     });
     svgEl.addEventListener('mouseleave', () => { tip.hidden = true; });
   })();
+
+  /* ---------------- RENDER: live readings feed ---------------- */
+  let feedFlash = false, feedInit = false;
+  function feedTime(d) {
+    return sameDay(d, new Date())
+      ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+      : d.toLocaleDateString([], { day: '2-digit', month: 'short' }) + ' ' + t12(d);
+  }
+  function renderFeed(hostels, h) {
+    let rows;
+    if (h) {
+      $('feedScope').textContent = '(' + h.name + ')';
+      rows = h.stats.readings.slice(-80).reverse()
+        .map(r => ({ weight: r.weight, time: r.time, source: r.source, hostel: null }));
+    } else {
+      $('feedScope').textContent = '(all hostels)';
+      const all = [];
+      hostels.forEach(x => x.stats.readings.forEach(r =>
+        all.push({ weight: r.weight, time: r.time, source: r.source, hostel: x.name })));
+      all.sort((a, b) => b.time - a.time);
+      rows = all.slice(0, 80);
+    }
+    const flashTop = feedFlash && feedInit; feedFlash = false; feedInit = true;
+    $('bnFeed').innerHTML = rows.length ? rows.map((r, i) => {
+      const live = r.source === 'live';
+      return `<div class="bn-feed-row${i === 0 && flashTop ? ' just-in' : ''}">
+        <span class="bn-feed-dot ${live ? 'g' : 'm'}"></span>
+        <span class="bn-feed-w">${r.weight.toFixed(2)} <small>kg</small></span>
+        <span class="bn-feed-meta">${r.hostel ? r.hostel + ' · ' : ''}${cap(mealOf(r.time))}${live ? ' · 📡' : ''}</span>
+        <span class="bn-feed-time" title="${r.time.toLocaleString()}">${feedTime(r.time)}</span>
+      </div>`;
+    }).join('') : '<div class="bn-feed-empty">Waiting for readings…</div>';
+  }
 
   /* ---------------- RENDER: donut + scales ---------------- */
   const MEAL_COLORS = { breakfast: '#22c55e', lunch: '#6366f1', dinner: '#f59e0b', snacks: '#eab308' };
@@ -701,6 +784,7 @@
       if (r.ok) serverConfig = await r.json();
     } catch (e) { /* backend down — button stays hidden */ }
     $('addReadingBtn').hidden = !(serverConfig.writeEnabled && role === 'admin');
+    $('resetBtn').hidden = !(role === 'admin' && adminToken);
   }
   $('addReadingBtn').addEventListener('click', () => {
     $('logHostel').innerHTML = HOSTELS.map((n, i) =>
@@ -738,6 +822,35 @@
     } catch (err) { $('logMsg').textContent = '✗ ' + err.message; }
   });
 
+  /* ---------------- RESET ALL DATA (admin, destructive) ---------------- */
+  $('resetBtn').addEventListener('click', () => {
+    $('resetMsg').textContent = '';
+    $('resetConfirm').disabled = false;
+    $('resetModal').hidden = false;
+  });
+  $('resetCancel').addEventListener('click', () => { $('resetModal').hidden = true; });
+  $('resetModal').addEventListener('click', e => { if (e.target === $('resetModal')) $('resetModal').hidden = true; });
+  $('resetConfirm').addEventListener('click', async () => {
+    $('resetConfirm').disabled = true;
+    $('resetMsg').textContent = 'Clearing channel…';
+    try {
+      const r = await fetch(API + '/api/reset', { method: 'POST', headers: { 'x-admin-token': adminToken } });
+      const j = await r.json().catch(() => ({}));
+      if (r.ok && j.ok) {
+        $('resetMsg').textContent = '✓ All data cleared.';
+        showToast('🗑️ All hostel data has been reset');
+        lastLiveCount = -1;                 // avoid a false "new reading" toast next refresh
+        setTimeout(() => { $('resetModal').hidden = true; refresh(); }, 1000);
+      } else {
+        $('resetMsg').textContent = '✗ ' + (j.error || 'failed');
+        $('resetConfirm').disabled = false;
+      }
+    } catch (err) {
+      $('resetMsg').textContent = '✗ ' + err.message;
+      $('resetConfirm').disabled = false;
+    }
+  });
+
   /* ---------------- TOASTS ---------------- */
   function showToast(txt) {
     const t = document.createElement('div');
@@ -751,6 +864,7 @@
   /* ---------------- MAIN ---------------- */
   let lastHostels = [];
   let timer = null, clockTimer = null;
+
 
   function showBanner(html) { const b = $('dashBanner'); b.innerHTML = html; b.hidden = false; }
   function hideBanner() { $('dashBanner').hidden = true; }
@@ -851,6 +965,7 @@
     renderRails(lastHostels);
     renderKpis(s, h);
     renderTrend(s);
+    renderFeed(lastHostels, h);
     renderDonut(s);
     renderScales(s);
     renderInsights(lastHostels, s, h);
@@ -871,7 +986,7 @@
       const liveCount = lastHostels.filter(x => x.source === 'live').length;
       // toast when a new live reading arrives between refreshes
       const liveReadings = lastHostels.reduce((n, x) => n + (x.source === 'live' ? x.stats.readings.length : 0), 0);
-      if (lastLiveCount >= 0 && liveReadings > lastLiveCount) showToast('📡 New reading received from a Waste Scale');
+      if (lastLiveCount >= 0 && liveReadings > lastLiveCount) { showToast('📡 New reading received from a Waste Scale'); feedFlash = true; }
       lastLiveCount = liveReadings;
       if (CFG.DEMO_FILL && liveCount < HOSTELS.length) {
         showBanner('📡 <strong>' + liveCount + '</strong> hostel(s) sending live data via the server; the rest are simulated (<code>DEMO_FILL</code> in <code>config.js</code>).');

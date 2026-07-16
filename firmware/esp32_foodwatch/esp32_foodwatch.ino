@@ -45,12 +45,8 @@
 // Set true to find CALIBRATION_FACTOR; set false for normal operation.
 bool  CALIBRATION_MODE = true;
 
-const char* WIFI_SSID     = "YOUR_WIFI_NAME";
-const char* WIFI_PASSWORD = "YOUR_WIFI_PASSWORD";
-
-// ThingSpeak Write API Key (channel -> API Keys tab). Kept on the device only —
-// do NOT commit the real key to a public repo.
-const char* TS_WRITE_API_KEY = "YOUR_THINGSPEAK_WRITE_KEY";
+const char* WIFI_SSID     = "Arrya";
+const char* WIFI_PASSWORD = "aryyaman2006";
 
 // Which hostel is this board? -> goes to field2 so the dashboard can tell
 // the 14 hostels apart. Match the order in config.js HOSTELS:
@@ -58,6 +54,16 @@ const char* TS_WRITE_API_KEY = "YOUR_THINGSPEAK_WRITE_KEY";
 //   6 Kopili       7 Barak       8 Jia Bharali 9 Pagladiya   10 Dikhow
 //  11 Dhansiri(B) 12 Kojoli     13 Bhrigu     14 Neelachal
 const int HOSTEL_CODE = 1;
+
+// ThingSpeak Write API Key lookup function based on hostel code.
+// Routes data to the correct channel among the 4 configured channels.
+String getWriteApiKey(int stationCode) {
+  if (stationCode >= 1 && stationCode <= 4)   return "AJ0MZWZXKCUBZ1J5"; // Channel 1
+  if (stationCode >= 5 && stationCode <= 8)   return "YJG5POD4Z0XBWRGW"; // Channel 2
+  if (stationCode >= 9 && stationCode <= 11)  return "MXMCFG7C9J9TZJ3M"; // Channel 3
+  if (stationCode >= 12 && stationCode <= 14) return "8UQC65LT36FK7DT6"; // Channel 4
+  return "";
+}
 
 // HX711 pins
 const int DOUT_PIN = 16;   // HX711 DT
@@ -113,9 +119,15 @@ bool sendToThingSpeak(float kg, int station) {
     delay(TS_MIN_INTERVAL_MS - since);
   }
 
+  String apiKey = getWriteApiKey(station);
+  if (apiKey == "") {
+    Serial.println("Error: Invalid hostel code. No API Key mapped.");
+    return false;
+  }
+
   HTTPClient http;
   String url = "https://api.thingspeak.com/update?api_key=";
-  url += TS_WRITE_API_KEY;
+  url += apiKey;
   url += "&field1=" + String(kg, 3);          // weight (kg)
   url += "&field2=" + String(station);        // hostel code
   url += "&field3=" + String(WiFi.RSSI());    // WiFi signal (dBm) -> device health
