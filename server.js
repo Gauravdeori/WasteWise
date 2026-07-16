@@ -16,8 +16,10 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const cors = require('cors');
 
 const app = express();
+app.use(cors());
 app.use(express.json());
 
 const resetFilePath = path.join(__dirname, 'reset_timestamp.txt');

@@ -11,7 +11,7 @@ window.FOODWATCH_CONFIG = {
      '' = same origin (the Node server serves this page and the API).
      Set to e.g. 'http://localhost:3000' only if you serve the frontend
      from a different origin than the backend. */
-  API_BASE: '',
+  API_BASE: window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost' ? 'http://localhost:3000' : '',
 
   /* Which ThingSpeak field holds what (used to parse the server response) */
   FIELD_WEIGHT: 'field1',        // load-cell weight in kg
