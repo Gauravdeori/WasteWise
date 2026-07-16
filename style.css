@@ -810,6 +810,13 @@ section.page-section.active:not(.hero) {
 .dw-login-card .login-logo b { color: var(--dw-green); }
 .dw-login-card h3 { color: var(--dw-ink); }
 .dw-login-card .login-sub { color: var(--dw-muted); }
+
+/* dw-login-card tab overrides for light theme */
+.dw-login-card .login-tabs { background: #f1f5f9; border-color: var(--dw-border); }
+.dw-login-card .login-tab { color: var(--dw-muted); }
+.dw-login-card .login-tab:hover:not(.active) { color: var(--dw-ink); }
+.dw-login-card .login-tab.active { background: #fff; color: var(--dw-green); box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid var(--dw-border); }
+
 .dw-login-card .login-form label { color: #4a5a50; }
 .dw-login-card .login-form input {
   background: #f7faf7;
