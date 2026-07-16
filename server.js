@@ -22,10 +22,23 @@ app.use(express.json());
 
 const resetFilePath = path.join(__dirname, 'reset_timestamp.txt');
 let localResetTime = null;
+let hostelResetTimes = {};       // { code: Date } — per-hostel selective resets
 if (fs.existsSync(resetFilePath)) {
   try {
-    const tsStr = fs.readFileSync(resetFilePath, 'utf8').trim();
-    if (tsStr) localResetTime = new Date(tsStr);
+    const raw = fs.readFileSync(resetFilePath, 'utf8').trim();
+    if (raw.startsWith('{')) {
+      // New JSON format: { global: ISO|null, hostels: { "1": ISO, ... } }
+      const obj = JSON.parse(raw);
+      if (obj.global) localResetTime = new Date(obj.global);
+      if (obj.hostels) {
+        Object.entries(obj.hostels).forEach(([k, v]) => {
+          hostelResetTimes[+k] = new Date(v);
+        });
+      }
+    } else if (raw) {
+      // Legacy: plain ISO timestamp
+      localResetTime = new Date(raw);
+    }
   } catch (e) {
     console.error('Failed to read reset timestamp:', e);
   }
@@ -111,6 +124,25 @@ function requireAdmin(req, res, next) {
   next();
 }
 
+// Shared filter: hides feeds that were reset globally or per-hostel
+function filterResetFeeds(feeds) {
+  const hasGlobal = !!localResetTime;
+  const hasHostel = Object.keys(hostelResetTimes).length > 0;
+  if (!hasGlobal && !hasHostel) return feeds;
+
+  return feeds.filter(f => {
+    const t = new Date(f.created_at);
+    // Global reset: hide everything before that time
+    if (hasGlobal && t <= localResetTime) return false;
+    // Per-hostel reset: hide readings for that hostel code before its reset time
+    if (hasHostel) {
+      const code = parseInt(f.field2, 10);
+      if (code && hostelResetTimes[code] && t <= hostelResetTimes[code]) return false;
+    }
+    return true;
+  });
+}
+
 // Proxy: read feeds — the READ key stays here, never sent to the client
 app.get('/api/feeds', async (req, res) => {
   const results = Math.min(parseInt(req.query.results, 10) || 8000, 8000);
@@ -140,10 +172,8 @@ app.get('/api/feeds', async (req, res) => {
       // Sort combined feeds by created_at in ascending order (earliest to latest)
       combinedFeeds.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
 
-      // Filter feeds if localResetTime is set
-      if (localResetTime) {
-        combinedFeeds = combinedFeeds.filter(f => new Date(f.created_at) > localResetTime);
-      }
+      // Filter feeds based on global and per-hostel reset timestamps
+      combinedFeeds = filterResetFeeds(combinedFeeds);
 
       // Slice the combined list to the requested count of latest readings
       if (combinedFeeds.length > results) {
@@ -168,8 +198,8 @@ app.get('/api/feeds', async (req, res) => {
       const r = await fetch(url, { signal: AbortSignal.timeout(10000) });
       if (!r.ok) return res.status(502).json({ error: 'thingspeak ' + r.status });
       const data = await r.json();
-      if (data && Array.isArray(data.feeds) && localResetTime) {
-        data.feeds = data.feeds.filter(f => new Date(f.created_at) > localResetTime);
+      if (data && Array.isArray(data.feeds)) {
+        data.feeds = filterResetFeeds(data.feeds);
       }
       res.set('Cache-Control', 'no-store');
       res.json(data);
@@ -215,74 +245,97 @@ app.post('/api/reading', requireAdmin, async (req, res) => {
   }
 });
 
-// DANGER: clear ALL data from the ThingSpeak channels (admin only, irreversible).
+// DANGER: clear data — selective (by hostel codes) or global (admin only, irreversible).
+// Body: { hostels: [1,3,5] }  for selective,  { hostels: 'all' } or omit for global reset.
 app.post('/api/reset', requireAdmin, async (req, res) => {
+  const { hostels } = req.body || {};
   const resetTime = new Date();
+  const isSelective = Array.isArray(hostels) && hostels.length > 0 && hostels.length < 14;
+  const codes = isSelective ? hostels.map(Number).filter(c => c >= 1 && c <= 14) : [];
+
   try {
-    fs.writeFileSync(resetFilePath, resetTime.toISOString(), 'utf8');
-    localResetTime = resetTime;
+    if (isSelective) {
+      // Per-hostel reset: record a per-code timestamp
+      codes.forEach(code => { hostelResetTimes[code] = resetTime; });
+    } else {
+      // Global reset
+      localResetTime = resetTime;
+      hostelResetTimes = {};            // clear selective resets (global overrides)
+    }
+    // Persist both global and per-hostel timestamps
+    const payload = {
+      global: localResetTime ? localResetTime.toISOString() : null,
+      hostels: {}
+    };
+    Object.entries(hostelResetTimes).forEach(([k, v]) => {
+      payload.hostels[k] = v.toISOString();
+    });
+    fs.writeFileSync(resetFilePath, JSON.stringify(payload), 'utf8');
   } catch (err) {
     console.error('Failed to save reset timestamp:', err);
   }
 
+  // ThingSpeak channel clearing — only on global reset
   let tsCleared = false;
   let tsError = null;
 
-  if (IS_MULTI_CHANNEL) {
-    const key = USER_KEY; // User API Key is required to clear feeds from account channels
-    if (key && key !== 'CKPKGPFN0V5ZIWNG') {
-      try {
-        const clearPromises = CHANNELS.map(ch => {
-          if (!ch.id) return Promise.resolve();
-          return fetch(`https://api.thingspeak.com/channels/${ch.id}/feeds.json`, {
+  if (!isSelective) {
+    if (IS_MULTI_CHANNEL) {
+      const key = USER_KEY;
+      if (key && key !== 'CKPKGPFN0V5ZIWNG') {
+        try {
+          const clearPromises = CHANNELS.map(ch => {
+            if (!ch.id) return Promise.resolve();
+            return fetch(`https://api.thingspeak.com/channels/${ch.id}/feeds.json`, {
+              method: 'DELETE',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+              body: 'api_key=' + encodeURIComponent(key),
+              signal: AbortSignal.timeout(15000)
+            }).then(async r => {
+              const txt = (await r.text()).trim();
+              if (!r.ok) throw new Error(`Channel ${ch.id}: ${txt || r.status}`);
+              return txt;
+            });
+          });
+
+          await Promise.all(clearPromises);
+          tsCleared = true;
+        } catch (e) {
+          tsError = e.message;
+        }
+      }
+    } else {
+      const key = USER_KEY || WRITE_KEY;
+      if (CHANNEL && key && key !== 'CKPKGPFN0V5ZIWNG' && key !== '8UQC65LT36FK7DT6') {
+        try {
+          const r = await fetch(`https://api.thingspeak.com/channels/${CHANNEL}/feeds.json`, {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: 'api_key=' + encodeURIComponent(key),
             signal: AbortSignal.timeout(15000)
-          }).then(async r => {
-            const txt = (await r.text()).trim();
-            if (!r.ok) throw new Error(`Channel ${ch.id}: ${txt || r.status}`);
-            return txt;
           });
-        });
-
-        await Promise.all(clearPromises);
-        tsCleared = true;
-      } catch (e) {
-        tsError = e.message;
-      }
-    }
-  } else {
-    // Single channel reset fallback
-    const key = USER_KEY || WRITE_KEY;
-    if (CHANNEL && key && key !== 'CKPKGPFN0V5ZIWNG' && key !== '8UQC65LT36FK7DT6') {
-      try {
-        const r = await fetch(`https://api.thingspeak.com/channels/${CHANNEL}/feeds.json`, {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: 'api_key=' + encodeURIComponent(key),
-          signal: AbortSignal.timeout(15000)
-        });
-        const txt = (await r.text()).trim();
-        if (r.ok) {
-          tsCleared = true;
-        } else {
-          tsError = r.status === 401
-            ? 'ThingSpeak rejected the key. Add TS_USER_API_KEY (Account → My Profile → User API Key) to .env.'
-            : 'thingspeak ' + r.status + ': ' + txt;
+          const txt = (await r.text()).trim();
+          if (r.ok) {
+            tsCleared = true;
+          } else {
+            tsError = r.status === 401
+              ? 'ThingSpeak rejected the key. Add TS_USER_API_KEY (Account → My Profile → User API Key) to .env.'
+              : 'thingspeak ' + r.status + ': ' + txt;
+          }
+        } catch (e) {
+          tsError = e.message;
         }
-      } catch (e) {
-        tsError = e.message;
       }
     }
   }
 
-  return res.json({
-    ok: true,
-    message: tsCleared
+  const message = isSelective
+    ? `Cleared data for hostel(s) ${codes.join(', ')} on the dashboard.`
+    : tsCleared
       ? 'All channels cleared on ThingSpeak and local dashboard reset.'
-      : 'Local dashboard reset. (ThingSpeak channels not cleared: ' + (tsError || 'TS_USER_API_KEY not configured') + ')'
-  });
+      : 'Local dashboard reset. (ThingSpeak channels not cleared: ' + (tsError || 'TS_USER_API_KEY not configured') + ')';
+
+  return res.json({ ok: true, message });
 });
 
 // Static site — deny dotfiles so .env / .git are never served

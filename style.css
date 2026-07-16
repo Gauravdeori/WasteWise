@@ -2184,6 +2184,61 @@ section.page-section.active:not(.hero) {
 }
 .btn-danger:hover { background: #d93a3a; }
 .btn-danger:disabled { opacity: .6; cursor: default; }
+.btn-danger-all { background: #7f1d1d; }
+.btn-danger-all:hover { background: #991b1b; }
+
+/* ---- reset modal: hostel selector ---- */
+.bn-reset-card { max-width: 560px; }
+.bn-reset-controls {
+  display: flex; align-items: center; gap: 12px;
+  margin: 14px 0 10px; padding-bottom: 8px;
+  border-bottom: 1px solid var(--bn-border);
+}
+.bn-check-all {
+  display: flex; align-items: center; gap: 8px;
+  font-size: .82rem; font-weight: 600; cursor: pointer;
+  user-select: none; color: var(--bn-ink);
+}
+.bn-check-all input[type="checkbox"] {
+  width: 16px; height: 16px; accent-color: var(--bn-red);
+  cursor: pointer;
+}
+.bn-reset-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 6px 10px;
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 4px 2px 8px;
+}
+.bn-reset-grid::-webkit-scrollbar { width: 5px; }
+.bn-reset-grid::-webkit-scrollbar-thumb { background: rgba(0,0,0,.1); border-radius: 4px; }
+.bn-reset-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 10px; border-radius: 8px;
+  font-size: .82rem; cursor: pointer;
+  user-select: none; transition: background .15s;
+  border: 1px solid transparent;
+}
+.bn-reset-item:hover { background: rgba(239, 68, 68, .06); }
+.bn-reset-item.checked { background: rgba(239, 68, 68, .08); border-color: rgba(239, 68, 68, .2); }
+.bn-reset-item input[type="checkbox"] {
+  width: 15px; height: 15px; accent-color: var(--bn-red);
+  cursor: pointer; flex-shrink: 0;
+}
+.bn-reset-item .bn-ri-code {
+  font-family: var(--dw-mono, monospace);
+  font-size: .7rem; font-weight: 700; color: var(--bn-faint);
+  min-width: 20px;
+}
+.bn-reset-item .bn-ri-name {
+  font-weight: 500; color: var(--bn-ink);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.bn-reset-selected-count {
+  font-size: .72rem; color: var(--bn-muted);
+  margin-left: auto; white-space: nowrap;
+}
 
 /* ---- toasts ---- */
 .bn-toasts {

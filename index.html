@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&family=Fraunces:opsz,wght@9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=11" />
+  <link rel="stylesheet" href="style.css?v=12" />
 </head>
 <body>
 
@@ -650,16 +650,26 @@
           </div>
         </div>
 
-        <!-- Reset-data confirmation modal -->
+        <!-- Reset-data confirmation modal (selective + all) -->
         <div class="bn-modal" id="resetModal" hidden>
-          <div class="bn-modal-card">
-            <h4>⚠️ Reset all hostel data?</h4>
-            <p>This permanently deletes <strong>every reading</strong> from the ThingSpeak
-              channel for all 14 hostels. Live and simulated history will be cleared and
-              cannot be recovered.</p>
+          <div class="bn-modal-card bn-reset-card">
+            <h4>⚠️ Delete hostel data</h4>
+            <p>Select the hostels whose data you want to permanently delete.
+              Cleared readings <strong>cannot be recovered</strong>.</p>
+
+            <div class="bn-reset-controls">
+              <label class="bn-check-all">
+                <input type="checkbox" id="resetSelectAll" /> <span>Select All Hostels</span>
+              </label>
+            </div>
+            <div class="bn-reset-grid" id="resetHostelGrid">
+              <!-- hostel checkboxes rendered by JS -->
+            </div>
+
             <div class="bn-modal-actions">
               <button type="button" class="bn-back" id="resetCancel">Cancel</button>
-              <button type="button" class="btn btn-danger" id="resetConfirm">Delete all data</button>
+              <button type="button" class="btn btn-danger" id="resetSelected" disabled>Delete selected</button>
+              <button type="button" class="btn btn-danger btn-danger-all" id="resetConfirm">Delete ALL data</button>
             </div>
             <p class="bn-modal-msg" id="resetMsg"></p>
           </div>
@@ -774,8 +784,8 @@
     </div>
   </footer>
 
-  <script src="config.js?v=5"></script>
+  <script src="config.js?v=6"></script>
   <script src="script.js"></script>
-  <script src="dashboard.js?v=6"></script>
+  <script src="dashboard.js?v=7"></script>
 </body>
 </html>

@@ -822,24 +822,109 @@
     } catch (err) { $('logMsg').textContent = '✗ ' + err.message; }
   });
 
-  /* ---------------- RESET ALL DATA (admin, destructive) ---------------- */
+  /* ---------------- RESET DATA (selective + all) ---------------- */
+  // Render hostel checkboxes inside the reset modal grid
+  function renderResetGrid() {
+    $('resetHostelGrid').innerHTML = HOSTELS.map((name, i) => {
+      const code = i + 1;
+      return `<label class="bn-reset-item" data-code="${code}">
+        <input type="checkbox" value="${code}" />
+        <span class="bn-ri-code">${pad(code)}</span>
+        <span class="bn-ri-name">${name}</span>
+      </label>`;
+    }).join('');
+  }
+  renderResetGrid();
+
+  function getSelectedCodes() {
+    return [...$('resetHostelGrid').querySelectorAll('input[type="checkbox"]:checked')]
+      .map(cb => +cb.value);
+  }
+  function syncResetUI() {
+    const selected = getSelectedCodes();
+    $('resetSelected').disabled = selected.length === 0;
+    $('resetSelected').textContent = selected.length
+      ? `Delete selected (${selected.length})`
+      : 'Delete selected';
+    // toggle .checked class on labels
+    $('resetHostelGrid').querySelectorAll('.bn-reset-item').forEach(el => {
+      el.classList.toggle('checked', el.querySelector('input').checked);
+    });
+    // sync select-all checkbox
+    const all = $('resetHostelGrid').querySelectorAll('input[type="checkbox"]');
+    $('resetSelectAll').checked = selected.length === all.length;
+    $('resetSelectAll').indeterminate = selected.length > 0 && selected.length < all.length;
+  }
+
+  $('resetHostelGrid').addEventListener('change', syncResetUI);
+  $('resetSelectAll').addEventListener('change', e => {
+    const checked = e.target.checked;
+    $('resetHostelGrid').querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.checked = checked; });
+    syncResetUI();
+  });
+
   $('resetBtn').addEventListener('click', () => {
     $('resetMsg').textContent = '';
     $('resetConfirm').disabled = false;
+    $('resetSelected').disabled = true;
+    // uncheck everything
+    $('resetHostelGrid').querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.checked = false; });
+    $('resetSelectAll').checked = false;
+    $('resetSelectAll').indeterminate = false;
+    $('resetHostelGrid').querySelectorAll('.bn-reset-item').forEach(el => el.classList.remove('checked'));
     $('resetModal').hidden = false;
   });
   $('resetCancel').addEventListener('click', () => { $('resetModal').hidden = true; });
   $('resetModal').addEventListener('click', e => { if (e.target === $('resetModal')) $('resetModal').hidden = true; });
+
+  // Selective delete: only the selected hostels
+  $('resetSelected').addEventListener('click', async () => {
+    const codes = getSelectedCodes();
+    if (!codes.length) return;
+    $('resetSelected').disabled = true;
+    $('resetConfirm').disabled = true;
+    $('resetMsg').textContent = `Clearing ${codes.length} hostel(s)…`;
+    try {
+      const r = await fetch(API + '/api/reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+        body: JSON.stringify({ hostels: codes })
+      });
+      const j = await r.json().catch(() => ({}));
+      if (r.ok && j.ok) {
+        const names = codes.map(c => HOSTELS[c - 1]).join(', ');
+        $('resetMsg').textContent = '✓ Cleared: ' + names;
+        showToast('🗑️ Deleted data for ' + codes.length + ' hostel(s)');
+        lastLiveCount = -1;
+        setTimeout(() => { $('resetModal').hidden = true; refresh(); }, 1200);
+      } else {
+        $('resetMsg').textContent = '✗ ' + (j.error || 'failed');
+        $('resetSelected').disabled = false;
+        $('resetConfirm').disabled = false;
+      }
+    } catch (err) {
+      $('resetMsg').textContent = '✗ ' + err.message;
+      $('resetSelected').disabled = false;
+      $('resetConfirm').disabled = false;
+    }
+  });
+
+  // Delete ALL data (all hostels)
   $('resetConfirm').addEventListener('click', async () => {
     $('resetConfirm').disabled = true;
-    $('resetMsg').textContent = 'Clearing channel…';
+    $('resetSelected').disabled = true;
+    $('resetMsg').textContent = 'Clearing all channels…';
     try {
-      const r = await fetch(API + '/api/reset', { method: 'POST', headers: { 'x-admin-token': adminToken } });
+      const r = await fetch(API + '/api/reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+        body: JSON.stringify({ hostels: 'all' })
+      });
       const j = await r.json().catch(() => ({}));
       if (r.ok && j.ok) {
         $('resetMsg').textContent = '✓ All data cleared.';
         showToast('🗑️ All hostel data has been reset');
-        lastLiveCount = -1;                 // avoid a false "new reading" toast next refresh
+        lastLiveCount = -1;
         setTimeout(() => { $('resetModal').hidden = true; refresh(); }, 1000);
       } else {
         $('resetMsg').textContent = '✗ ' + (j.error || 'failed');
