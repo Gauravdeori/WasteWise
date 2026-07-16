@@ -1928,6 +1928,7 @@ section.page-section.active:not(.hero) {
 }
 
 .dw-section { background: var(--bn-bg); }
+.dw-section.login-mode { background: linear-gradient(rgba(12, 36, 24, 0.72), rgba(12, 36, 24, 0.72)), url('assets/hero-bg.jpg') center/cover no-repeat !important; }
 .dw-section .dashboard-content { width: min(1560px, 97%); margin: 0 auto; }
 
 /* ---- top status bar ---- */
