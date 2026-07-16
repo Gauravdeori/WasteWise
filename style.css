@@ -2830,3 +2830,129 @@ section.page-section.active:not(.hero) {
   color: var(--bn-muted);
   margin-top: 2px;
 }
+
+/* ===================================================================
+   PREMIUM MOBILE DASHBOARD  (≤ 680px)  — restructures phone view only
+   Desktop/tablet layout above is untouched.
+   =================================================================== */
+@media (max-width: 680px) {
+
+  /* --- 0. kill horizontal overflow: let every fl/grid child shrink --- */
+  .dash-app, .bn-center, .bn-rail-col, .bn-kpis, .bn-analytics-main,
+  .bn-analytics2, .bn-admin-analytics, .bn-insights, .bn-low, .bn-card,
+  .bn-head-titles, .bn-brand > div, .bn-kpi-body, .bn-feed { min-width: 0; }
+  .bn-analytics-main, .bn-analytics2 { grid-template-columns: minmax(0, 1fr) !important; }
+  #bnTrend, .bn-card svg, table, img { max-width: 100%; }
+  .dash-app { padding: 0 12px 28px; overflow-x: hidden; }
+  .dw-section .dashboard-content { width: 100%; }
+
+  /* --- 1. app bar (compact: brand+actions row, then status ribbon) --- */
+  .bn-topbar {
+    flex-wrap: wrap;
+    gap: 10px 6px;
+    padding: 12px 12px 10px;
+    border-radius: 16px;
+    margin-bottom: 14px;
+  }
+  .bn-brand { flex: 1 1 auto; min-width: 0; gap: 10px; }
+  .bn-brand-ico { width: 36px; height: 36px; flex-shrink: 0; }
+  .bn-brand h2 { font-size: .95rem; line-height: 1.12; }
+  .bn-brand p { font-size: .64rem; }
+  .bn-top-actions { order: 1; gap: 5px; flex-wrap: nowrap; justify-content: flex-end; align-items: center; }
+  .bn-iconbtn { width: 34px; height: 34px; font-size: .92rem; }
+  .bn-iconbtn svg { width: 17px; height: 17px; }
+  .bn-role-chip { display: none; }   /* the green admin top-border already signals role */
+  /* status cells → a sleek horizontal ribbon on its own full-width row
+     (override an earlier mobile rule that hid it with display:none) */
+  .bn-top-cells {
+    display: flex !important;
+    order: 3; flex: 0 0 100%; width: 100%; min-width: 0;
+    flex-wrap: nowrap; gap: 8px;
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+    padding-bottom: 2px; scrollbar-width: none;
+  }
+  .bn-top-cells::-webkit-scrollbar { display: none; }
+  .bn-cell { flex: 0 0 auto; padding: 8px 13px; }
+  .bn-bell-drop { width: min(86vw, 320px); }
+
+  /* --- 2. one column; analytics first, hostels after --- */
+  /* align-items:stretch is critical — the base grid uses align-items:start,
+     which lets children size to the 560px trend SVG and overflow the screen */
+  .bn-grid { display: flex; flex-direction: column; align-items: stretch; gap: 16px; }
+  .bn-center, .bn-rail-col { width: 100%; }
+  .bn-center { order: 1; gap: 14px; }
+  .bn-rail-col { order: 2; gap: 12px; }
+
+  /* order inside the centre column: header → KPIs → chart → feed... */
+  .bn-head-card { order: 0; text-align: left; }
+  #bnKpis { order: 1; }
+  .bn-analytics-main { order: 2; }
+  .bn-analytics2 { order: 3; }
+  .bn-admin-analytics { order: 4; }
+  .bn-center > .bn-card.admin-only { order: 5; }
+  .bn-foot { order: 6; padding-top: 6px; }
+
+  .bn-head-row { flex-wrap: wrap; gap: 8px 10px; }
+  #bnTitle { font-size: 1.18rem; }
+  #bnSub { font-size: .8rem; }
+
+  /* --- 3. KPIs: two premium hero tiles --- */
+  .bn-kpis { grid-template-columns: 1fr 1fr !important; gap: 10px; }
+  .bn-kpi { flex-direction: column; align-items: flex-start; gap: 12px; padding: 16px 15px; }
+  .bn-kpi-ico { width: 42px; height: 42px; }
+  .bn-kpi-body p { font-size: .64rem; }
+  .bn-kpi-body h5 { font-size: 1.45rem; }
+
+  /* --- 4. charts & feed sized for the phone --- */
+  #bnTrend { height: 230px; }
+  .bn-axis { font-size: .66rem; }
+  .bn-feed { max-height: 300px; }
+  .bn-donut-wrap { flex-wrap: wrap; justify-content: center; gap: 14px; }
+  #bnDonut { width: 150px; height: 150px; }
+
+  /* --- 5. hostels → swipeable snap carousel --- */
+  .bn-rail-col::before {
+    content: "All Hostels";
+    font-family: var(--font-head);
+    font-weight: 700; font-size: 1.05rem;
+    color: var(--bn-ink); padding: 2px 2px 0;
+  }
+  .bn-rail, .bn-rail-scroll, .bn-rail-group { min-width: 0; max-width: 100%; }
+  .bn-rail { max-height: none; overflow: visible; padding: 0; }
+  .bn-rail-scroll { flex-direction: column; animation: none !important; }
+  .bn-rail-group:nth-child(2) { display: none; }   /* drop the marquee clone */
+  .bn-rail-group {
+    flex-direction: row; gap: 12px;
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+    padding: 4px 2px 12px; scrollbar-width: none;
+  }
+  .bn-rail-group::-webkit-scrollbar { display: none; }
+  .bn-rail-group .bn-hostel {
+    flex: 0 0 76%; max-width: 300px;
+    scroll-snap-align: start;
+  }
+  .bn-hostel:hover { transform: none; box-shadow: var(--bn-shadow); }
+  .bn-rail-col .bn-insights { grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  /* --- 6. admin analytics & wide content scroll inside their card --- */
+  .bn-admin-analytics { display: flex; flex-direction: column; gap: 12px; }
+  .bn-summary-wrap { display: block; width: 100%; min-width: 0; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .bn-summary-wrap table { width: max-content; min-width: 100%; }
+  .bn-compare-row .bn-cmp-name { width: 88px; }
+
+  /* --- 7. modals become bottom sheets; toasts full width --- */
+  .bn-modal { padding: 0; align-items: flex-end; }
+  .bn-modal-card { width: 100%; max-height: 90vh; overflow-y: auto; border-radius: 20px 20px 0 0; }
+  .bn-reset-grid { grid-template-columns: 1fr 1fr; }
+  .bn-modal-actions { flex-wrap: wrap; }
+  .bn-toasts { left: 12px; right: 12px; bottom: 14px; }
+  .bn-toast { width: 100%; text-align: center; }
+}
+
+/* very small phones */
+@media (max-width: 380px) {
+  .bn-kpis { grid-template-columns: 1fr !important; }
+  .bn-rail-group .bn-hostel { flex-basis: 84%; }
+  .bn-rail-col .bn-insights { grid-template-columns: 1fr; }
+}
