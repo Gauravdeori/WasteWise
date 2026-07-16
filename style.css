@@ -635,6 +635,21 @@ section.page-section.active:not(.hero) {
 .login-card h3 { color: #fff; font-size: 1.35rem; margin-bottom: 6px; }
 .login-sub { color: rgba(255, 255, 255, .6); font-size: .88rem; margin-bottom: 26px; }
 .login-form { display: flex; flex-direction: column; gap: 16px; text-align: left; }
+
+/* Login Tabs */
+.login-tabs { display: flex; gap: 8px; margin-bottom: 20px; background: rgba(0,0,0,0.1); padding: 4px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); }
+.login-tab { flex: 1; padding: 8px; border: none; background: transparent; border-radius: 6px; font-weight: 600; color: rgba(255,255,255,0.5); cursor: pointer; transition: .2s; }
+.login-tab.active { background: rgba(255,255,255,0.1); color: #fff; }
+
+.login-panel { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+.sso-btn {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  background: white; color: #111; border: none; border-radius: 8px; padding: 12px;
+  font-weight: 600; cursor: pointer; transition: transform .2s;
+}
+.sso-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+.sso-btn svg { flex-shrink: 0; }
+
 .login-form label { color: rgba(255, 255, 255, .7); font-size: .82rem; font-weight: 600; display: flex; flex-direction: column; gap: 7px; }
 .login-form input {
   padding: 13px 16px; border-radius: 11px;

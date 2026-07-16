@@ -441,18 +441,39 @@
       <div class="dash-login reveal" id="dashLogin">
         <div class="login-card dw-login-card">
           <div class="login-logo"><svg class="pic logo-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21v-9"/><path d="M12 12C12 7.2 8.2 4 3.5 4 3.5 9 7.2 12 12 12z"/><path d="M12 12c0-3.8 3-6.3 8.5-6.3C20 10.3 16.8 12 12 12z"/></svg> Waste<b>Wise</b></div>
-          <h3>Admin Sign In</h3>
+          <h3 id="loginTitle">Sign In</h3>
           <p class="login-sub">Sign in to access the food waste monitoring dashboard</p>
-          <form id="loginForm" class="login-form">
-            <label>Username
-              <input type="text" id="loginUser" placeholder="username" autocomplete="username" required />
-            </label>
-            <label>Password
-              <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password" required />
-            </label>
-            <button type="submit" class="btn btn-primary">Sign In</button>
-            <p class="login-err" id="loginErr" hidden></p>
-          </form>
+          
+          <div class="login-tabs">
+            <button class="login-tab active" data-role="user" id="tabUser">User</button>
+            <button class="login-tab" data-role="admin" id="tabAdmin">Admin</button>
+          </div>
+
+          <!-- User Login (Placeholder SSO) -->
+          <div id="userPanel" class="login-panel">
+            <button class="sso-btn" id="btnGoogle">
+              <svg viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+              Sign in with Google
+            </button>
+            <button class="sso-btn" id="btnApple">
+              <svg viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M16.36 14.08c-.02-2.28 1.86-3.37 1.95-3.42-1.06-1.55-2.7-1.76-3.29-1.79-1.4-.14-2.73.83-3.45.83-.72 0-1.82-.81-2.97-.79-1.5.02-2.89.87-3.66 2.21-1.57 2.73-.4 6.78 1.13 8.98.74 1.07 1.63 2.27 2.8 2.23 1.12-.04 1.54-.72 2.9-.72 1.34 0 1.74.72 2.92.69 1.21-.02 1.97-1.09 2.71-2.16 1.16-1.7 1.64-3.35 1.66-3.43-.02-.02-3.16-1.22-3.18-3.42z"/><path d="M14.54 7.22c.62-.75 1.04-1.79.92-2.83-.89.04-1.97.6-2.6 1.35-.56.67-1.06 1.74-.92 2.76.99.08 1.98-.53 2.6-1.28z"/></svg>
+              Sign in with Apple
+            </button>
+          </div>
+
+          <!-- Admin Login (Legacy Password) -->
+          <div id="adminPanel" class="login-panel" hidden>
+            <form id="loginForm" class="login-form">
+              <label>Username
+                <input type="text" id="loginUser" placeholder="username" autocomplete="username" required />
+              </label>
+              <label>Password
+                <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password" required />
+              </label>
+              <button type="submit" class="btn btn-primary">Sign In</button>
+              <p class="login-err" id="loginErr" hidden></p>
+            </form>
+          </div>
           <p class="login-hint" id="loginHint" hidden></p>
         </div>
       </div>

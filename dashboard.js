@@ -100,6 +100,38 @@
     return null;
   }
 
+  // Login Tabs Toggle
+  const tabUser = $('tabUser');
+  const tabAdmin = $('tabAdmin');
+  const userPanel = $('userPanel');
+  const adminPanel = $('adminPanel');
+
+  tabUser.addEventListener('click', () => {
+    tabUser.classList.add('active');
+    tabAdmin.classList.remove('active');
+    userPanel.hidden = false;
+    adminPanel.hidden = true;
+  });
+
+  tabAdmin.addEventListener('click', () => {
+    tabAdmin.classList.add('active');
+    tabUser.classList.remove('active');
+    adminPanel.hidden = false;
+    userPanel.hidden = true;
+  });
+
+  // Placeholder SSO Login Handlers
+  const handleSSOLogin = () => {
+    localStorage.setItem(AUTH_KEY, '1');
+    localStorage.setItem(ROLE_KEY, 'user');
+    localStorage.removeItem(TOKEN_KEY);
+    applyRole('user');
+    showApp(true); start();
+  };
+
+  $('btnGoogle').addEventListener('click', handleSSOLogin);
+  $('btnApple').addEventListener('click', handleSSOLogin);
+
   $('loginForm').addEventListener('submit', async e => {
     e.preventDefault();
     const btn = $('loginForm').querySelector('button[type="submit"]');
