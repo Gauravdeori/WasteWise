@@ -2520,7 +2520,7 @@ section.page-section.active:not(.hero) {
 /* ---- lower row ---- */
 .bn-low {
   display: grid;
-  grid-template-columns: 1.1fr 1fr 1.2fr 1.1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 14px;
 }
 .bn-ai-card { background: linear-gradient(150deg, #f6f5ff, #ffffff); }

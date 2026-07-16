@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&family=Fraunces:opsz,wght@9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="style.css?v=12" />
+  <link rel="stylesheet" href="style.css?v=13" />
 </head>
 <body>
 
@@ -520,6 +520,16 @@
           <div class="bn-rail-col">
             <aside class="bn-rail" id="railLeft"></aside>
             <div class="bn-insights" id="bnInsights"></div>
+            
+            <section class="bn-card admin-only">
+              <div class="bn-card-head"><h4>Device Monitor</h4></div>
+              <div class="bn-system" id="bnSystem"></div>
+            </section>
+
+            <section class="bn-card">
+              <div class="bn-card-head"><h4 id="bnT5Title">Top 5 Hostels <small>(By Waste Today)</small></h4></div>
+              <div class="bn-top5" id="bnTop5"></div>
+            </section>
           </div>
 
           <main class="bn-center">
@@ -610,19 +620,9 @@
               </section>
 
               <section class="bn-card admin-only">
-                <div class="bn-card-head"><h4>Device Monitor</h4></div>
-                <div class="bn-system" id="bnSystem"></div>
-              </section>
-
-              <section class="bn-card admin-only">
                 <div class="bn-card-head"><h4>Recent Alerts</h4></div>
                 <div class="bn-alerts" id="bnAlerts"></div>
                 <button class="bn-link" id="alertsMore" hidden>View all alerts →</button>
-              </section>
-
-              <section class="bn-card">
-                <div class="bn-card-head"><h4 id="bnT5Title">Top 5 Hostels <small>(By Waste Today)</small></h4></div>
-                <div class="bn-top5" id="bnTop5"></div>
               </section>
             </div>
 
