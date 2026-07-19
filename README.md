@@ -1,4 +1,4 @@
-# WasteWise — IoT Based Real-Time Food Waste Monitoring System
+# Wastewize — IoT Based Real-Time Food Waste Monitoring System
 
 An IoT project by **IIT Guwahati · TIH** to *measure, monitor and reduce food waste*.
 An **ESP32 + load cell (HX711)** in each hostel weighs food waste and pushes readings to
@@ -6,7 +6,7 @@ An **ESP32 + load cell (HX711)** in each hostel weighs food waste and pushes rea
 **14 IITG hostels** — both a comparison overview and per-hostel drill-downs.
 
 ```
-ESP32 + HX711 (per hostel) ─► ThingSpeak (cloud) ─► WasteWise server (holds keys) ─► Browser dashboard
+ESP32 + HX711 (per hostel) ─► ThingSpeak (cloud) ─► Wastewize server (holds keys) ─► Browser dashboard
    weighs waste, tags hostel     stores + timestamps    proxies /api/feeds, /api/reading     login → analytics
 ```
 
@@ -97,7 +97,7 @@ API_BASE: '',                 // '' = same origin as the backend
 FIELD_WEIGHT: 'field1',       // load-cell weight (kg)
 FIELD_STATION: 'field2',      // HOSTEL CODE (1..14)
 PRICE_PER_KG: 75, CO2_PER_KG: 2.5, REFRESH_SECONDS: 20,
-ACCOUNTS: [ { username: 'user', password: 'wastewise2026', role: 'user' } ], // viewer only; admin is server-side
+ACCOUNTS: [ { username: 'user', password: 'wastewize2026', role: 'user' } ], // viewer only; admin is server-side
 HOSTELS: [ 'Brahmaputra', 'Subansiri', ... ],             // 14 hostels; index+1 = hostel code
 DEMO_FILL: true               // simulate hostels that have no real data yet
 ```
@@ -120,7 +120,7 @@ The dashboard opens on a **sign-in screen**. There are two demo accounts (in
 | Role | Login | Verified | Sees |
 |------|-------|----------|------|
 | **Admin** | `admin` / (your `ADMIN_PASS`) | **server-side** (`/api/login`) | Everything: device monitor, WiFi signal, alerts, AI recommendation, CSV export, and the token-protected "Log Reading" control |
-| **Viewer** | `user` / `wastewise2026` | client-side (read-only) | A simplified, view-only dashboard — KPIs, waste trend, waste-by-meal, insights, hostel rails and top-5 |
+| **Viewer** | `user` / `wastewize2026` | client-side (read-only) | A simplified, view-only dashboard — KPIs, waste trend, waste-by-meal, insights, hostel rails and top-5 |
 
 - **Admin** credentials live only in the server `.env` (`ADMIN_USER`/`ADMIN_PASS`), never in
   `config.js`. On login the client calls `/api/login`; a valid response returns the admin

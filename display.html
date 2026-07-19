@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wastewize — Hostel Display</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; background: #0b1410; font-family: 'Inter', sans-serif; overflow: hidden; }
+
+    /* ---------- setup screen (first run) ---------- */
+    .setup {
+      height: 100%; display: grid; place-items: center; padding: 24px;
+      background: radial-gradient(1200px 600px at 50% 0%, #14301f, #0b1410);
+    }
+    .setup-card {
+      width: min(460px, 100%); background: #12211a; color: #e8f2ec;
+      border: 1px solid #24402f; border-radius: 18px; padding: 34px;
+    }
+    .setup-card h1 { font-family: 'Sora', sans-serif; font-size: 1.5rem; margin-bottom: 6px; }
+    .setup-card h1 span { color: #22c55e; }
+    .setup-card p { color: #93a89c; font-size: .88rem; margin-bottom: 22px; }
+    .setup-card label { display: block; font-size: .78rem; color: #93a89c; margin-bottom: 7px; font-weight: 600; }
+    .setup-card select {
+      width: 100%; padding: 13px 14px; border-radius: 10px; margin-bottom: 18px;
+      background: #0e1a14; color: #e8f2ec; border: 1px solid #2b4a37; font-size: .95rem;
+    }
+    .setup-card button {
+      width: 100%; padding: 14px; border: 0; border-radius: 10px; cursor: pointer;
+      background: #22c55e; color: #06210f; font-weight: 700; font-size: .95rem;
+    }
+    .setup-hint { margin-top: 16px; font-size: .74rem; color: #6d8377; line-height: 1.6; }
+
+    /* ---------- dashboard frame ---------- */
+    #board { position: fixed; inset: 0; border: 0; width: 100%; height: 100%; background: #f3f5f7; }
+
+    /* ---------- ad overlay ---------- */
+    #adLayer {
+      position: fixed; inset: 0; background: #000; z-index: 10;
+      display: none; align-items: center; justify-content: center;
+    }
+    #adLayer.on { display: flex; animation: fadeIn .5s ease; }
+    @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+    #adLayer img, #adLayer video { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+    .ad-tag {
+      position: fixed; top: 26px; left: 26px; z-index: 12;
+      background: rgba(0,0,0,.55); backdrop-filter: blur(6px);
+      color: #fff; padding: 8px 16px; border-radius: 999px;
+      font-size: .8rem; letter-spacing: 1.6px; text-transform: uppercase; font-weight: 700;
+    }
+    .ad-meta {
+      position: fixed; bottom: 26px; left: 26px; z-index: 12; color: #fff;
+      text-shadow: 0 2px 12px rgba(0,0,0,.8);
+    }
+    .ad-meta h3 { font-family: 'Sora', sans-serif; font-size: 1.5rem; }
+    .ad-meta p { font-size: .9rem; opacity: .8; }
+    /* countdown ring */
+    .ad-timer {
+      position: fixed; top: 26px; right: 26px; z-index: 12;
+      width: 54px; height: 54px; display: grid; place-items: center;
+    }
+    .ad-timer svg { position: absolute; inset: 0; transform: rotate(-90deg); }
+    .ad-timer circle { fill: none; stroke-width: 4; }
+    .ad-timer .bg { stroke: rgba(255,255,255,.25); }
+    .ad-timer .fg { stroke: #22c55e; transition: stroke-dashoffset 1s linear; }
+    .ad-timer span { color: #fff; font-size: .85rem; font-weight: 700; }
+
+    /* next-ad ticker on the dashboard */
+    .next-pill {
+      position: fixed; bottom: 18px; right: 18px; z-index: 5;
+      background: rgba(16,24,40,.82); color: #fff; backdrop-filter: blur(8px);
+      padding: 9px 16px; border-radius: 999px; font-size: .74rem; font-weight: 600;
+      letter-spacing: .4px; display: flex; align-items: center; gap: 8px;
+    }
+    .next-pill i { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; display: inline-block; }
+    .next-pill.hide { display: none; }
+    .err { position: fixed; bottom: 18px; left: 18px; z-index: 5; color: #ffb4b4;
+      background: rgba(0,0,0,.6); padding: 8px 14px; border-radius: 8px; font-size: .74rem; }
+  </style>
+</head>
+<body>
+
+  <!-- Pick which hostel TV this is (stored on the device, asked once) -->
+  <div class="setup" id="setup">
+    <div class="setup-card">
+      <h1>Waste<span>wize</span> Display</h1>
+      <p>Set up this screen once. It will then run on its own.</p>
+      <label for="hostelPick">Which hostel is this TV in?</label>
+      <select id="hostelPick"></select>
+      <button id="startBtn">Start Display</button>
+      <p class="setup-hint">
+        Shows the live waste dashboard, and plays sponsor ads full-screen on the
+        schedule set in the Ads dashboard. Press <b>F</b> for fullscreen,
+        <b>R</b> to reset this screen's hostel.
+      </p>
+    </div>
+  </div>
+
+  <!-- live dashboard -->
+  <iframe id="board" hidden title="Wastewize dashboard"></iframe>
+  <div class="next-pill hide" id="nextPill"><i></i><span id="nextTxt">—</span></div>
+  <div class="err" id="err" hidden></div>
+
+  <!-- ad overlay -->
+  <div id="adLayer">
+    <div class="ad-tag" id="adTag">Advertisement</div>
+    <div class="ad-timer" id="adTimer">
+      <svg viewBox="0 0 54 54"><circle class="bg" cx="27" cy="27" r="24"/><circle class="fg" id="ring" cx="27" cy="27" r="24"/></svg>
+      <span id="adCount">0</span>
+    </div>
+    <div id="adSlot"></div>
+    <div class="ad-meta"><h3 id="adTitle"></h3><p id="adSponsor"></p></div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="display.js"></script>
+</body>
+</html>

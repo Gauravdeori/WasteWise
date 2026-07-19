@@ -2956,3 +2956,89 @@ section.page-section.active:not(.hero) {
   .bn-rail-group .bn-hostel { flex-basis: 84%; }
   .bn-rail-col .bn-insights { grid-template-columns: 1fr; }
 }
+
+/* ================================================================
+   ADVERTISEMENT MANAGER  (admin third dashboard)
+   ================================================================ */
+.ads-view { display: flex; flex-direction: column; gap: 14px; }
+.ads-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+.ads-head h3 { font-size: 1.4rem; color: var(--bn-ink); }
+.ads-head p { font-size: .82rem; color: var(--bn-muted); max-width: 620px; margin-top: 2px; }
+.ads-banner { background: #fdecec; border: 1px solid #f5c6c6; color: #a13636; border-radius: 12px; padding: 12px 16px; font-size: .84rem; }
+
+.ads-timing-grid { display: flex; gap: 20px; align-items: flex-end; flex-wrap: wrap; }
+.ads-timing-grid label, .ads-new label { display: flex; flex-direction: column; gap: 6px; font-size: .74rem; font-weight: 600; color: var(--bn-muted); }
+.ads-input-row { display: flex; align-items: center; gap: 8px; }
+.ads-input-row input { width: 90px; }
+.ads-view input, .ads-view select { border: 1px solid var(--bn-border); border-radius: 9px; padding: 10px 12px; font-size: .9rem; color: var(--bn-ink); background: #fff; font-family: var(--font-body); }
+.ads-view input:focus, .ads-view select:focus { outline: none; border-color: var(--bn-green); }
+.ads-note { font-size: .74rem; color: var(--bn-muted); margin-top: 10px; }
+.ads-note.ok { color: var(--bn-green); }
+.ads-note.warn { color: #b26a00; }
+.ads-note code { background: #f1f3f5; padding: 1px 6px; border-radius: 5px; }
+
+.ads-main { display: grid; grid-template-columns: 1fr 1.25fr; gap: 14px; align-items: start; }
+.ads-new form { display: flex; flex-direction: column; gap: 12px; }
+.ads-src-tabs { display: flex; gap: 8px; }
+.ads-tab { flex: 1; padding: 9px; border: 1px solid var(--bn-border); background: #fff; border-radius: 9px; font-size: .82rem; font-weight: 600; color: var(--bn-muted); cursor: pointer; }
+.ads-tab.active { background: var(--bn-green); color: #fff; border-color: var(--bn-green); }
+.ads-dates { display: flex; gap: 12px; }
+.ads-dates label { flex: 1; }
+.ads-hostels { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px 12px; }
+.ads-hostel { flex-direction: row !important; align-items: center; gap: 7px !important; font-weight: 500 !important; color: var(--bn-ink) !important; font-size: .8rem !important; cursor: pointer; }
+.ads-hostel input { width: auto; }
+.ads-msg { font-size: .82rem; font-weight: 600; color: var(--bn-green); min-height: 1em; }
+.ads-msg.bad { color: var(--bn-red); }
+
+.ads-list { display: flex; flex-direction: column; gap: 10px; max-height: 620px; overflow-y: auto; }
+.ads-empty { color: var(--bn-faint); text-align: center; padding: 30px 0; font-size: .88rem; }
+.ads-total { font-family: var(--dw-mono, monospace); font-size: .74rem; color: var(--bn-muted); }
+.ads-item { display: flex; gap: 12px; border: 1px solid var(--bn-border); border-radius: 12px; padding: 10px; }
+.ads-thumb { position: relative; width: 92px; height: 66px; flex-shrink: 0; border-radius: 8px; overflow: hidden; background: #0d1117; }
+.ads-thumb img, .ads-thumb video { width: 100%; height: 100%; object-fit: cover; }
+.ads-type { position: absolute; bottom: 4px; right: 4px; background: rgba(0,0,0,.6); color: #fff; font-size: .62rem; padding: 1px 6px; border-radius: 5px; }
+.ads-info { flex: 1; min-width: 0; }
+.ads-item-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.ads-item-top b { color: var(--bn-ink); font-size: .9rem; }
+.ads-status { font-size: .64rem; font-weight: 700; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
+.ads-status.live { background: var(--bn-green-bg); color: var(--bn-green); }
+.ads-status.wait { background: #fef3e2; color: #b26a00; }
+.ads-status.off { background: #f2f4f7; color: var(--bn-faint); }
+.ads-sponsor { font-size: .74rem; color: var(--bn-muted); margin-top: 2px; }
+.ads-meta { font-size: .72rem; color: var(--bn-muted); margin-top: 3px; }
+.ads-meta.dim { color: var(--bn-faint); }
+.ads-actions { display: flex; flex-direction: column; gap: 6px; justify-content: center; }
+.ads-actions .bn-back { font-size: .72rem; padding: 6px 10px; }
+.ads-actions .danger { color: var(--bn-red); border-color: #f0caca; }
+
+.ads-kiosk { display: flex; flex-direction: column; align-items: flex-start; }
+.ads-kiosk-btn { margin-top: 12px; }
+
+@media (max-width: 900px) { .ads-main { grid-template-columns: 1fr; } }
+@media (max-width: 680px) {
+  .ads-view { padding-top: 4px; }
+  .ads-timing-grid { flex-direction: column; align-items: stretch; gap: 12px; }
+  .ads-hostels { grid-template-columns: 1fr 1fr; }
+  .ads-item { flex-wrap: wrap; }
+  .ads-actions { flex-direction: row; width: 100%; }
+}
+
+/* ================================================================
+   KIOSK MODE  — clean read-only dashboard for the hostel TV iframe
+   ================================================================ */
+body.kiosk-mode .navbar,
+body.kiosk-mode #dashLogin,
+body.kiosk-mode .bn-top-actions,
+body.kiosk-mode .bn-rail-col,
+body.kiosk-mode .bn-admin-analytics,
+body.kiosk-mode .bn-back,
+body.kiosk-mode .bn-scope-chip,
+body.kiosk-mode #adsView,
+body.kiosk-mode .admin-only { display: none !important; }
+body.kiosk-mode #dashboard.page-section { padding-top: 0 !important; }
+body.kiosk-mode .dash-app { padding: 18px 22px; }
+body.kiosk-mode .bn-grid { display: block; }
+body.kiosk-mode .bn-topbar { margin-bottom: 16px; }
+body.kiosk-mode .bn-kpi-body h5 { font-size: 2.4rem; }
+body.kiosk-mode #bnTrend { height: 300px; }
+body.kiosk-mode .bn-head-card h3 { font-size: 1.6rem; }

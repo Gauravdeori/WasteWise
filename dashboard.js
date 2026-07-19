@@ -1,12 +1,12 @@
 /* ================================================================
-   WasteWise — IITG Waste Monitor (bento dashboard)
+   Wastewize — IITG Waste Monitor (bento dashboard)
    ----------------------------------------------------------------
    • Login gate (demo auth, browser-only)
    • Bento layout: hostel rails + institute overview center
    • Tap any hostel card -> that hostel's own dashboard opens in
      the center (KPIs, trend, meals, scales, insights, activity);
      "← Overview" returns to the institute view
-   • Live data via the WasteWise backend (/api/feeds); hostels
+   • Live data via the Wastewize backend (/api/feeds); hostels
      without real data are simulated (config.DEMO_FILL)
    • field1 = weight (kg), field2 = hostel code (1..14)
    ================================================================ */
@@ -793,12 +793,12 @@
     if (h) {
       csv = 'Time,Meal,Weight (kg),Source\n' +
         h.stats.readings.map(r => `${r.time.toISOString()},${mealOf(r.time)},${r.weight},${r.source}`).join('\n');
-      name = 'wastewise-' + h.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-readings.csv';
+      name = 'wastewize-' + h.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-readings.csv';
     } else {
       csv = 'Hostel,Code,Status,Today (kg),7-day (kg),Efficiency (%),Source\n' +
         lastHostels.map(x =>
           `${x.name},${x.code},${x.status},${x.stats.today.toFixed(2)},${x.stats.week7.toFixed(2)},${x.stats.eff},${x.source}`).join('\n');
-      name = 'wastewise-hostel-summary.csv';
+      name = 'wastewize-hostel-summary.csv';
     }
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
@@ -1091,7 +1091,7 @@
     renderAlerts(lastHostels, h);
     renderSystem(lastHostels, s, h);
     renderTop5(lastHostels, h);
-    $('dashNote').textContent = '© 2026 IIT Guwahati Waste Monitor · WasteWise · Last updated ' + new Date().toLocaleTimeString();
+    $('dashNote').textContent = '© 2026 IIT Guwahati Waste Monitor · Wastewize · Last updated ' + new Date().toLocaleTimeString();
   }
 
   let lastLiveCount = -1;
@@ -1109,7 +1109,7 @@
         showBanner('📡 <strong>' + liveCount + '</strong> hostel(s) sending live data via the server; the rest are simulated (<code>DEMO_FILL</code> in <code>config.js</code>).');
       } else hideBanner();
     } catch (err) {
-      showBanner('❌ Could not reach the WasteWise server (<strong>' + err.message + '</strong>) — showing simulated data. Start it with <code>npm start</code>.');
+      showBanner('❌ Could not reach the Wastewize server (<strong>' + err.message + '</strong>) — showing simulated data. Start it with <code>npm start</code>.');
       lastHostels = buildHostels({});
     }
     $('dashRefresh').classList.remove('spin');
@@ -1132,7 +1132,22 @@
     if (clockTimer) { clearInterval(clockTimer); clockTimer = null; }
   }
 
-  if (localStorage.getItem(AUTH_KEY) === '1') {
+  // Kiosk mode (?kiosk=1): the hostel-TV iframe shows a clean, read-only
+  // dashboard with no login and no controls. Scope it to that TV's hostel.
+  const kioskParams = new URLSearchParams(location.search);
+  if (kioskParams.get('kiosk') === '1') {
+    document.body.classList.add('kiosk-mode');
+    // activate the dashboard section in the single-page app
+    const dlink = document.querySelector('.nav-links a[href="#dashboard"]');
+    if (dlink) dlink.click();
+    applyRole('user');
+    showApp(true);
+    start();
+    const hk = parseInt(kioskParams.get('hostel') || localStorage.getItem('wastewize_display_hostel') || '0', 10);
+    if (hk >= 1 && hk <= HOSTELS.length && typeof openHostel === 'function') {
+      setTimeout(() => openHostel(hk), 900);
+    }
+  } else if (localStorage.getItem(AUTH_KEY) === '1') {
     applyRole(localStorage.getItem(ROLE_KEY) || 'admin');
     showApp(true); start();
   } else showApp(false);

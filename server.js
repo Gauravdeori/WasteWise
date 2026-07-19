@@ -1,5 +1,5 @@
 /* ================================================================
-   WasteWise — backend server
+   Wastewize — backend server
    ----------------------------------------------------------------
    Serves the static site AND proxies ThingSpeak so the API keys
    stay on the server (in .env) and never reach the browser.
@@ -184,7 +184,7 @@ app.get('/api/feeds', async (req, res) => {
 
       res.set('Cache-Control', 'no-store');
       res.json({
-        channel: { name: 'WasteWise Multi-Channel' },
+        channel: { name: 'Wastewize Multi-Channel' },
         feeds: combinedFeeds
       });
     } catch (e) {
@@ -340,6 +340,173 @@ app.post('/api/reset', requireAdmin, async (req, res) => {
   return res.json({ ok: true, message });
 });
 
+/* ================================================================
+   ADVERTISEMENTS  —  admin-managed sponsor media for the hostel TVs
+   ----------------------------------------------------------------
+   Media is hosted on Cloudinary (if configured); the ad list and the
+   timing settings live in ads.json next to the server.
+     GET    /api/ads            (admin)  list ads + settings
+     POST   /api/ads            (admin)  upload a file OR add a URL
+     PATCH  /api/ads/:id        (admin)  edit / pause / retarget
+     DELETE /api/ads/:id        (admin)  remove (also from Cloudinary)
+     PUT    /api/ads/settings   (admin)  interval + default duration
+     GET    /api/ads/playlist   (public) what a given TV should play
+     POST   /api/ads/:id/play   (public) count an impression
+   ================================================================ */
+const multer = require('multer');
+const cloudinary = require('cloudinary').v2;
+
+const CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME || '';
+const CLOUD_KEY = process.env.CLOUDINARY_API_KEY || '';
+const CLOUD_SECRET = process.env.CLOUDINARY_API_SECRET || '';
+const CLOUD_ENABLED = Boolean(CLOUD_NAME && CLOUD_KEY && CLOUD_SECRET);
+if (CLOUD_ENABLED) {
+  cloudinary.config({ cloud_name: CLOUD_NAME, api_key: CLOUD_KEY, api_secret: CLOUD_SECRET, secure: true });
+}
+
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 60 * 1024 * 1024 } });
+const adsFilePath = path.join(__dirname, 'ads.json');
+const DEFAULT_ADS = { settings: { intervalMinutes: 10, defaultDurationSec: 15 }, ads: [] };
+
+function readAds() {
+  try {
+    if (fs.existsSync(adsFilePath)) {
+      const data = JSON.parse(fs.readFileSync(adsFilePath, 'utf8'));
+      return { settings: { ...DEFAULT_ADS.settings, ...(data.settings || {}) }, ads: data.ads || [] };
+    }
+  } catch (e) { console.error('ads.json read failed:', e.message); }
+  return JSON.parse(JSON.stringify(DEFAULT_ADS));
+}
+function writeAds(store) {
+  try { fs.writeFileSync(adsFilePath, JSON.stringify(store, null, 2), 'utf8'); return true; }
+  catch (e) { console.error('ads.json write failed:', e.message); return false; }
+}
+// Is this ad live right now, and does it target this hostel?
+function adIsLive(ad, hostel) {
+  if (ad.active === false) return false;
+  const now = new Date();
+  if (ad.start && now < new Date(ad.start)) return false;
+  if (ad.end && now > new Date(ad.end + 'T23:59:59')) return false;
+  if (hostel && Array.isArray(ad.hostels) && ad.hostels.length &&
+      !ad.hostels.includes(Number(hostel))) return false;
+  return true;
+}
+
+app.get('/api/ads', requireAdmin, (req, res) => {
+  const store = readAds();
+  res.json({ ...store, cloudEnabled: CLOUD_ENABLED });
+});
+
+app.post('/api/ads', requireAdmin, upload.single('file'), async (req, res) => {
+  const b = req.body || {};
+  const title = (b.title || '').trim();
+  if (!title) return res.status(400).json({ error: 'title required' });
+
+  let url = (b.url || '').trim();
+  let publicId = '';
+  let type = b.type === 'video' ? 'video' : 'image';
+
+  if (req.file) {
+    if (!CLOUD_ENABLED) {
+      return res.status(503).json({ error: 'File upload needs Cloudinary. Add CLOUDINARY_* keys to .env, or paste a media URL instead.' });
+    }
+    try {
+      const isVideo = req.file.mimetype.startsWith('video');
+      type = isVideo ? 'video' : 'image';
+      const result = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { folder: 'wastewize_ads', resource_type: isVideo ? 'video' : 'image' },
+          (err, r) => (err ? reject(err) : resolve(r))
+        );
+        stream.end(req.file.buffer);
+      });
+      url = result.secure_url;
+      publicId = result.public_id;
+    } catch (e) {
+      return res.status(502).json({ error: 'Cloudinary upload failed: ' + e.message });
+    }
+  }
+  if (!url) return res.status(400).json({ error: 'upload a file or provide a media URL' });
+
+  const store = readAds();
+  const ad = {
+    id: 'ad_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    title,
+    sponsor: (b.sponsor || '').trim(),
+    type, url, publicId,
+    durationSec: Math.max(3, Math.min(120, parseInt(b.durationSec, 10) || store.settings.defaultDurationSec)),
+    hostels: (() => { try { const h = JSON.parse(b.hostels || '[]'); return Array.isArray(h) ? h.map(Number) : []; } catch { return []; } })(),
+    start: b.start || '', end: b.end || '',
+    active: b.active !== 'false',
+    plays: 0,
+    createdAt: new Date().toISOString()
+  };
+  store.ads.unshift(ad);
+  if (!writeAds(store)) return res.status(500).json({ error: 'could not save ads.json' });
+  res.json({ ok: true, ad });
+});
+
+app.patch('/api/ads/:id', requireAdmin, (req, res) => {
+  const store = readAds();
+  const ad = store.ads.find(a => a.id === req.params.id);
+  if (!ad) return res.status(404).json({ error: 'ad not found' });
+  const b = req.body || {};
+  if (b.title !== undefined) ad.title = String(b.title).trim();
+  if (b.sponsor !== undefined) ad.sponsor = String(b.sponsor).trim();
+  if (b.durationSec !== undefined) ad.durationSec = Math.max(3, Math.min(120, parseInt(b.durationSec, 10) || ad.durationSec));
+  if (b.hostels !== undefined && Array.isArray(b.hostels)) ad.hostels = b.hostels.map(Number);
+  if (b.start !== undefined) ad.start = b.start;
+  if (b.end !== undefined) ad.end = b.end;
+  if (b.active !== undefined) ad.active = Boolean(b.active);
+  if (!writeAds(store)) return res.status(500).json({ error: 'could not save ads.json' });
+  res.json({ ok: true, ad });
+});
+
+app.delete('/api/ads/:id', requireAdmin, async (req, res) => {
+  const store = readAds();
+  const idx = store.ads.findIndex(a => a.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: 'ad not found' });
+  const [ad] = store.ads.splice(idx, 1);
+  if (ad.publicId && CLOUD_ENABLED) {
+    try { await cloudinary.uploader.destroy(ad.publicId, { resource_type: ad.type === 'video' ? 'video' : 'image' }); }
+    catch (e) { console.error('cloudinary destroy failed:', e.message); }
+  }
+  if (!writeAds(store)) return res.status(500).json({ error: 'could not save ads.json' });
+  res.json({ ok: true });
+});
+
+app.put('/api/ads/settings', requireAdmin, (req, res) => {
+  const store = readAds();
+  const b = req.body || {};
+  if (b.intervalMinutes !== undefined)
+    store.settings.intervalMinutes = Math.max(1, Math.min(240, parseInt(b.intervalMinutes, 10) || store.settings.intervalMinutes));
+  if (b.defaultDurationSec !== undefined)
+    store.settings.defaultDurationSec = Math.max(3, Math.min(120, parseInt(b.defaultDurationSec, 10) || store.settings.defaultDurationSec));
+  if (!writeAds(store)) return res.status(500).json({ error: 'could not save ads.json' });
+  res.json({ ok: true, settings: store.settings });
+});
+
+// Public: the TV asks "what should I play?" — no admin token needed
+app.get('/api/ads/playlist', (req, res) => {
+  const store = readAds();
+  const hostel = req.query.hostel;
+  const ads = store.ads.filter(a => adIsLive(a, hostel))
+    .map(({ id, title, sponsor, type, url, durationSec }) => ({ id, title, sponsor, type, url, durationSec }));
+  res.set('Cache-Control', 'no-store');
+  res.json({ settings: store.settings, ads });
+});
+
+// Public: count an impression
+app.post('/api/ads/:id/play', (req, res) => {
+  const store = readAds();
+  const ad = store.ads.find(a => a.id === req.params.id);
+  if (!ad) return res.status(404).json({ error: 'ad not found' });
+  ad.plays = (ad.plays || 0) + 1;
+  ad.lastPlayed = new Date().toISOString();
+  writeAds(store);
+  res.json({ ok: true, plays: ad.plays });
+});
+
 // Static site — deny dotfiles so .env / .git are never served
 app.use(express.static(__dirname, { dotfiles: 'deny', extensions: ['html'] }));
 
@@ -348,5 +515,5 @@ module.exports = app;
 
 // Only listen if called directly (e.g. `node server.js`)
 if (require.main === module) {
-  app.listen(PORT, () => console.log(`WasteWise running on http://localhost:${PORT}`));
+  app.listen(PORT, () => console.log(`Wastewize running on http://localhost:${PORT}`));
 }

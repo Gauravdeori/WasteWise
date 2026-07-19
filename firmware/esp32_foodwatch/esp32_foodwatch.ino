@@ -1,6 +1,6 @@
 /* ============================================================================
-   WasteWise — IoT Food Waste Monitoring
-   ESP32 + HX711 load cell  ->  ThingSpeak  ->  WasteWise dashboard
+   Wastewize — IoT Food Waste Monitoring
+   ESP32 + HX711 load cell  ->  ThingSpeak  ->  Wastewize dashboard
 
    HOW IT WORKS
    ------------
@@ -161,7 +161,7 @@ float waitForStableKg() {
 void setup() {
   Serial.begin(115200);
   delay(400);
-  Serial.println("\n\n=== WasteWise ESP32 — hostel " + String(HOSTEL_CODE) + " ===");
+  Serial.println("\n\n=== Wastewize ESP32 — hostel " + String(HOSTEL_CODE) + " ===");
 
   scale.begin(DOUT_PIN, SCK_PIN);
 

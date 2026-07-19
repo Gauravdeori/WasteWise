@@ -529,6 +529,9 @@
             <button class="bn-iconbtn danger admin-only" id="resetBtn" title="Reset all hostel data" hidden>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9 7V4.5h6V7"/><path d="M6 7l1 14h10l1-14"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
             </button>
+            <button class="bn-iconbtn admin-only" id="adsBtn" title="Advertisements">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a1 1 0 0 0 1 1h3l5 4V6L7 10H4a1 1 0 0 0-1 1z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19.5 5.5a9 9 0 0 1 0 13"/></svg>
+            </button>
             <button class="bn-iconbtn" id="dashRefresh" title="Refresh now">⟳</button>
             <button class="bn-iconbtn danger" id="dashLogout" title="Sign out">⎋</button>
           </div>
@@ -650,6 +653,113 @@
             <p class="bn-foot" id="dashNote">© 2026 IIT Guwahati Waste Monitor · All rights reserved.</p>
           </main>
 
+        </div>
+
+        <!-- ============ ADS DASHBOARD (admin only) ============ -->
+        <div class="ads-view" id="adsView" hidden>
+          <div class="ads-head">
+            <div>
+              <h3>Advertisement Manager</h3>
+              <p>Sponsor media shown on the hostel mess TVs — the revenue that keeps Wastewize self-sustaining.</p>
+            </div>
+            <button class="bn-back" id="adsBack">← Waste Dashboard</button>
+          </div>
+
+          <div class="ads-banner" id="adsBanner" hidden></div>
+
+          <!-- playback timing -->
+          <section class="bn-card ads-timing">
+            <div class="bn-card-head"><h4>Playback Timing</h4></div>
+            <div class="ads-timing-grid">
+              <label>Show ads every
+                <div class="ads-input-row">
+                  <input type="number" id="adsInterval" min="1" max="240" />
+                  <span>minutes</span>
+                </div>
+              </label>
+              <label>Default ad length
+                <div class="ads-input-row">
+                  <input type="number" id="adsDuration" min="3" max="120" />
+                  <span>seconds</span>
+                </div>
+              </label>
+              <button class="btn btn-primary" id="adsSaveSettings">Save Timing</button>
+            </div>
+            <p class="ads-note" id="adsTimingNote">Each TV plays every live ad back-to-back, then returns to the dashboard.</p>
+          </section>
+
+          <div class="ads-main">
+            <!-- new ad -->
+            <section class="bn-card ads-new">
+              <div class="bn-card-head"><h4>Add an Advertisement</h4></div>
+              <form id="adsForm">
+                <label>Title
+                  <input type="text" id="adTitle" placeholder="e.g. Campus Cafe — 20% off" required />
+                </label>
+                <label>Sponsor / company
+                  <input type="text" id="adSponsor" placeholder="e.g. Campus Cafe" />
+                </label>
+
+                <div class="ads-src-tabs">
+                  <button type="button" class="ads-tab active" data-src="file">Upload file</button>
+                  <button type="button" class="ads-tab" data-src="url">Paste URL</button>
+                </div>
+                <div id="adsSrcFile">
+                  <label>Photo or video
+                    <input type="file" id="adFile" accept="image/*,video/*" />
+                  </label>
+                  <p class="ads-note" id="adsCloudNote"></p>
+                </div>
+                <div id="adsSrcUrl" hidden>
+                  <label>Media URL
+                    <input type="url" id="adUrl" placeholder="https://…/poster.jpg" />
+                  </label>
+                  <label>Type
+                    <select id="adType" class="bn-mini-select">
+                      <option value="image">Image</option>
+                      <option value="video">Video</option>
+                    </select>
+                  </label>
+                </div>
+
+                <label>Show for
+                  <div class="ads-input-row">
+                    <input type="number" id="adDuration" min="3" max="120" placeholder="15" />
+                    <span>seconds</span>
+                  </div>
+                </label>
+
+                <div class="ads-dates">
+                  <label>Start <input type="date" id="adStart" /></label>
+                  <label>End <input type="date" id="adEnd" /></label>
+                </div>
+
+                <label>Show in hostels <small>(none selected = all 14)</small></label>
+                <div class="ads-hostels" id="adHostels"></div>
+
+                <button type="submit" class="btn btn-primary" id="adSubmit">Add Advertisement</button>
+                <p class="ads-msg" id="adsMsg"></p>
+              </form>
+            </section>
+
+            <!-- existing ads -->
+            <section class="bn-card ads-list-card">
+              <div class="bn-card-head">
+                <h4>Advertisements <small id="adsCount"></small></h4>
+                <span class="ads-total" id="adsPlays"></span>
+              </div>
+              <div class="ads-list" id="adsList"></div>
+            </section>
+          </div>
+
+          <section class="bn-card ads-kiosk">
+            <div class="bn-card-head"><h4>Hostel TV / Kiosk</h4></div>
+            <p class="ads-note">
+              Open this on the monitor installed in a mess, pick its hostel once, then press <b>F</b> for
+              fullscreen. It shows the live dashboard and plays these ads on the schedule above.
+            </p>
+            <a class="btn btn-primary ads-kiosk-btn" href="display.html" target="_blank" rel="noopener">Open Display Mode ↗</a>
+          </section>
         </div>
 
         <!-- Log Reading modal (shown only when the server has a write key) -->
@@ -810,5 +920,6 @@
   <script src="config.js?v=6"></script>
   <script src="script.js"></script>
   <script src="dashboard.js?v=7"></script>
+  <script src="ads.js?v=1"></script>
 </body>
 </html>

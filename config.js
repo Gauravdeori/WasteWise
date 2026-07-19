@@ -1,5 +1,5 @@
 /* ================================================================
-   WasteWise — Frontend Configuration (NO SECRETS)
+   Wastewize — Frontend Configuration (NO SECRETS)
    ----------------------------------------------------------------
    ThingSpeak keys now live only on the server (see .env). The
    dashboard talks to the backend at /api/* instead of ThingSpeak,
@@ -41,7 +41,7 @@ window.FOODWATCH_CONFIG = {
        user  → view-only accounts checked in the browser (read-only, low risk). */
   ACCOUNTS: [
       { username: 'admin', password: 'foodwatch2026', role: 'admin', token: '8f60115f5639389f175c07cd05964a0c67bb1218bf4357bd' },
-      { username: 'user', password: 'wastewise2026', role: 'user' }
+      { username: 'user', password: 'wastewize2026', role: 'user' }
     ],
   ADMIN_HINT: 'admin',            // just the username shown on the login hint
   SHOW_LOGIN_HINT: true,
