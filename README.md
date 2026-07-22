@@ -218,4 +218,6 @@ Load cell → HX711: `E+/E-` = red/black, `A+/A-` = white/green (typical 4-wire 
 - Per-mess dashboards, daily email reports, threshold alerts (ThingSpeak React / MATLAB).
 
 ---
+Co-Author Gaurav Deori
+Co-Author Nishanka Borthakur
 *An initiative supported by **IITG TIH**.*
