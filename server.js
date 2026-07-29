@@ -1,5 +1,5 @@
 /* ================================================================
-   Wastewize — backend server
+   WasteWise — backend server
    ----------------------------------------------------------------
    Serves the static site AND proxies ThingSpeak so the API keys
    stay on the server (in .env) and never reach the browser.
@@ -184,7 +184,7 @@ app.get('/api/feeds', async (req, res) => {
 
       res.set('Cache-Control', 'no-store');
       res.json({
-        channel: { name: 'Wastewize Multi-Channel' },
+        channel: { name: 'WasteWise Multi-Channel' },
         feeds: combinedFeeds
       });
     } catch (e) {
@@ -515,5 +515,5 @@ module.exports = app;
 
 // Only listen if called directly (e.g. `node server.js`)
 if (require.main === module) {
-  app.listen(PORT, () => console.log(`Wastewize running on http://localhost:${PORT}`));
+  app.listen(PORT, () => console.log(`WasteWise running on http://localhost:${PORT}`));
 }

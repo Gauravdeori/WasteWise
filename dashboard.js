@@ -1,5 +1,5 @@
 /* ================================================================
-   Wastewize — IITG Waste Monitor (bento dashboard)
+   WasteWise — IITG Waste Monitor (bento dashboard)
    ----------------------------------------------------------------
    • Login gate (demo auth, browser-only)
    • Bento layout: hostel rails + institute overview center

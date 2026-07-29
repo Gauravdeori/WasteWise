@@ -1,5 +1,5 @@
 /* ================================================================
-   Wastewize — Hostel TV / Kiosk display
+   WasteWise — Hostel TV / Kiosk display
    ----------------------------------------------------------------
    Runs on the monitor installed in a hostel mess:
      • shows the live waste dashboard (read-only viewer)
