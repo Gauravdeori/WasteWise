@@ -20,7 +20,7 @@ window.FOODWATCH_CONFIG = {
 
   /* Load-cell sanity filter — readings outside this range are ignored
      (protects the dashboard from HX711 spikes / miscalibration) */
-  MIN_VALID_KG: 0.02,
+  MIN_VALID_KG: 0.00,
   MAX_VALID_KG: 60,
 
   /* Conversion factors (from the project proposal) */

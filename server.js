@@ -154,7 +154,7 @@ app.get('/api/feeds', async (req, res) => {
       // Fetch feeds from all 4 channels concurrently
       const fetchPromises = CHANNELS.map((ch, idx) => {
         console.log(`[Multi-Channel] Fetching from Channel ${idx + 1} (ID: ${ch.id})`);
-        const url = `https://api.thingspeak.com/channels/${ch.id}/feeds.json?results=${results}&api_key=${ch.readKey}`;
+        const url = `https://api.thingspeak.com/channels/${ch.id}/feeds.json?results=${results}&api_key=${ch.readKey}&_=${Date.now()}`;
         return fetch(url, { signal: AbortSignal.timeout(10000) })
           .then(async r => {
             if (!r.ok) throw new Error(`Channel ${ch.id} returned status ${r.status}`);
@@ -195,7 +195,7 @@ app.get('/api/feeds', async (req, res) => {
     if (!CHANNEL || !READ_KEY) {
       return res.status(500).json({ error: 'server missing TS_CHANNEL_ID / TS_READ_KEY' });
     }
-    const url = `https://api.thingspeak.com/channels/${CHANNEL}/feeds.json?results=${results}&api_key=${READ_KEY}`;
+    const url = `https://api.thingspeak.com/channels/${CHANNEL}/feeds.json?results=${results}&api_key=${READ_KEY}&_=${Date.now()}`;
     try {
       const r = await fetch(url, { signal: AbortSignal.timeout(10000) });
       if (!r.ok) return res.status(502).json({ error: 'thingspeak ' + r.status });

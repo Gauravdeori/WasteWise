@@ -252,7 +252,7 @@
 
   /* ---------------- FETCH (via backend proxy) ---------------- */
   async function fetchFeeds() {
-    const res = await fetch(`${API}/api/feeds?results=${CFG.MAX_FEED_RESULTS || 8000}`, { cache: 'no-store' });
+    const res = await fetch(`${API}/api/feeds?results=${CFG.MAX_FEED_RESULTS || 8000}&_=${Date.now()}`, { cache: 'no-store' });
     if (!res.ok) throw new Error('HTTP ' + res.status);
     return res.json();
   }
