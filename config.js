@@ -48,8 +48,8 @@ window.FOODWATCH_CONFIG = {
 
   /* IIT Guwahati hostels — index + 1 is the hostel's code (ESP32 field2) */
   HOSTELS: [
-    'Brahmaputra', 'Subansiri', 'Lohit', 'Dhansiri (Girls)', 'Manas', 'Kopili', 'Barak',
-    'Jia Bharali', 'Pagladiya', 'Dikhow', 'Dhansiri (Boys)', 'Kojoli Annex', 'Bhrigu', 'Neelachal'
+    'Manas', 'Lohit', 'Kameng', 'Brahmaputra', 'Barak', 'Siang', 'Disang',
+    'Kapili', 'Umiam', 'Dibang', 'Subansiri', 'Dhansiri'
   ],
 
   /* Fill hostels with no real data yet with simulated data (for demos).

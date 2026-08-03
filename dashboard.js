@@ -32,11 +32,10 @@
   const MEALS = [
     { key: 'breakfast', name: 'Breakfast', start: 7.5, end: 10.5, range: '7:30 AM - 10:30 AM', startTxt: '7:30 AM' },
     { key: 'lunch', name: 'Lunch', start: 12, end: 15, range: '12:00 PM - 3:00 PM', startTxt: '12:00 PM' },
-    { key: 'snacks', name: 'Snacks', start: 16, end: 18, range: '4:00 PM - 6:00 PM', startTxt: '4:00 PM' },
     { key: 'dinner', name: 'Dinner', start: 19, end: 22, range: '7:00 PM - 10:00 PM', startTxt: '7:00 PM' }
   ];
   const hourOf = d => d.getHours() + d.getMinutes() / 60;
-  const mealOf = t => { const h = hourOf(t); return h < 11.25 ? 'breakfast' : h < 15.5 ? 'lunch' : h < 18.5 ? 'snacks' : 'dinner'; };
+  const mealOf = t => { const h = hourOf(t); return h < 11.25 ? 'breakfast' : h < 16 ? 'lunch' : 'dinner'; };
   const currentMeal = () => { const h = hourOf(new Date()); return MEALS.find(m => h >= m.start && h < m.end) || null; };
   const nextMeal = () => { const h = hourOf(new Date()); return MEALS.find(m => m.start > h) || MEALS[0]; };
 
@@ -184,8 +183,8 @@
     for (let d = 29; d >= 0; d--) {
       const rnd = mulberry32(hostelIndex * 1000 + d);
       MEALS.forEach(m => {
-        const size = m.key === 'snacks' ? 0.35 : 1;             // snacks are lighter
-        const events = 1 + Math.floor(rnd() * (m.key === 'snacks' ? 2 : 3));
+        const size = 1;
+        const events = 1 + Math.floor(rnd() * 3);
         for (let e = 0; e < events; e++) {
           const t = new Date(now);
           t.setDate(now.getDate() - d);
@@ -562,21 +561,21 @@
   }
 
   /* ---------------- RENDER: donut + scales ---------------- */
-  const MEAL_COLORS = { breakfast: '#22c55e', lunch: '#6366f1', dinner: '#f59e0b', snacks: '#eab308' };
+  const MEAL_COLORS = { breakfast: '#22c55e', lunch: '#6366f1', dinner: '#f59e0b' };
   function renderDonut(s) {
     const now = new Date();
     const weekAgo = new Date(now); weekAgo.setDate(now.getDate() - 7);
-    const sums = { breakfast: 0, lunch: 0, dinner: 0, snacks: 0 };
+    const sums = { breakfast: 0, lunch: 0, dinner: 0 };
     s.readings.forEach(r => { if (r.time >= weekAgo) sums[mealOf(r.time)] += r.weight; });
     const total = Object.values(sums).reduce((a, b) => a + b, 0) || 1;
     let offset = 25, circles = '';
-    ['lunch', 'dinner', 'breakfast', 'snacks'].forEach(k => {
+    ['lunch', 'dinner', 'breakfast'].forEach(k => {
       const pct = sums[k] / total * 100;
       circles += `<circle cx="21" cy="21" r="15.9" stroke="${MEAL_COLORS[k]}" stroke-dasharray="${pct} ${100 - pct}" stroke-dashoffset="${offset}"/>`;
       offset -= pct;
     });
     $('bnDonut').innerHTML = circles;
-    $('bnDonutLegend').innerHTML = ['breakfast', 'lunch', 'dinner', 'snacks'].map(k => {
+    $('bnDonutLegend').innerHTML = ['breakfast', 'lunch', 'dinner'].map(k => {
       const pct = Math.round(sums[k] / total * 100);
       return `<div><i style="background:${MEAL_COLORS[k]}"></i>${cap(k)} <b>${pct}%</b> (${Math.round(sums[k])} kg)</div>`;
     }).join('');
@@ -590,8 +589,7 @@
     const rows = [
       { name: 'Breakfast Bin', key: 'breakfast', on: h >= 7.5 },
       { name: 'Lunch Bin', key: 'lunch', on: h >= 12 },
-      { name: 'Dinner Bin', key: 'dinner', on: h >= 19 },
-      { name: 'Common Bin', key: 'snacks', on: true }
+      { name: 'Dinner Bin', key: 'dinner', on: h >= 19 }
     ];
     $('bnScales').innerHTML = rows.map(r => {
       const kg = kgFor(r.key);

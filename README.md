@@ -220,4 +220,4 @@ Load cell → HX711: `E+/E-` = red/black, `A+/A-` = white/green (typical 4-wire 
 ---
 Co-Author Gaurav Deori
 Co-Author Nishanka Borthakur
-*An initiative supported by **IITG TIH**.*
+*developed under **IITG TIH**.*
